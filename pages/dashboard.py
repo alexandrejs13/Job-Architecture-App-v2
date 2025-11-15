@@ -1,7 +1,13 @@
-import streamlit as st
+import streamlit as st, base64
+
 def run():
-    st.markdown(f"""<div class='page-header'>
-    <img src='assets/icons/data_2_perfromance.png' class='page-icon'>
-    <h1>Dashboard</h1>
-    </div>""", unsafe_allow_html=True)
-    st.write("Conteúdo da página Dashboard")
+    icon='assets/icons/data_2_perfromance.png'
+    with open(icon,'rb') as f:
+        b64=base64.b64encode(f.read()).decode()
+    st.markdown(f"""
+<div class='page-header' style='display:flex;align-items:center;gap:18px;margin-top:25px;'>
+<img src='data:image/png;base64,{b64}' width='48'/>
+<h1 style='font-size:48px;margin:0;'>Dashboard</h1>
+</div>
+""", unsafe_allow_html=True)
+    st.write("Conteúdo da página Dashboard...")
