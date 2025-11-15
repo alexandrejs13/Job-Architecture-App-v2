@@ -1,1 +1,4 @@
-placeholder css
+body, [data-testid="stAppViewContainer"] {background:white !important;}
+section[data-testid="stSidebar"] {background:#f2fefb !important; min-width:280px !important; max-width:280px !important;}
+.page-header {display:flex; gap:18px; align-items:center; margin-bottom:30px;}
+.page-icon {width:64px; height:64px;}
