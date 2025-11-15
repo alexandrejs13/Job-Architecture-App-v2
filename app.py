@@ -1,6 +1,8 @@
 import streamlit as st
 
-# Centralizar logo na sidebar
+st.set_page_config(page_title="Job Architecture App", layout="wide")
+
+# Logo centralizado acima do menu nativo
 with st.sidebar:
     col1, col2, col3 = st.columns([1,3,1])
     with col2:
