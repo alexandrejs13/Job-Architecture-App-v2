@@ -1,16 +1,19 @@
 import streamlit as st
 
-# LOGO EM TODAS AS PÁGINAS
+def load_css():
+    with open("assets/sig_theme.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+load_css()
+
 with st.sidebar:
     st.image("assets/icons/SIG_Logo_RGB_Black.png", width=140)
     st.markdown("---")
 
-# Cabeçalho com ícone nítido e alinhado
 col1, col2 = st.columns([0.10, 0.90])
 with col1:
     st.image("assets/icons/checkmark_success.png", width=28)
 with col2:
-    st.markdown("## Job Match")
+    st.markdown("# Job Match")
 
-st.markdown("---")
 st.write("Conteúdo da página Job Match.")
