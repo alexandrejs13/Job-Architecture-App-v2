@@ -1,21 +1,12 @@
-# pages/3_Job_Profile_Description.py
-# Nova versão completa, integrada ao design atual do app SIG
-
 import streamlit as st
 import pandas as pd
-import numpy as np
 import re
 import html
 
-from utils.data_loader import load_excel_data
-
-# ==========================================================
-# CONFIG
-# ==========================================================
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ==========================================================
-# HEADER — identidade visual nova
+# HEADER NOVO (mantido igual ao app novo)
 # ==========================================================
 def header(icon_path, title):
     col1, col2 = st.columns([0.08, 0.92])
@@ -35,256 +26,222 @@ def header(icon_path, title):
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# CSS GLOBAL + COR DE FUNDO SIG
+# CSS — fundo branco e layout igual ao app novo
 # ==========================================================
-st.markdown("""
+st.markdown(
+    """
 <style>
-html, body, .main, .block-container, [data-testid="stAppViewContainer"] {
-    background: #f5f3f0 !important;
+[data-testid="stAppViewContainer"] {
+    background-color: white !important;
 }
 
+.block-container {
+    padding-top: 1rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+/* GRID */
 .comparison-grid {
     display: grid;
-    gap: 20px;
+    gap: 22px;
     margin-top: 25px;
 }
 
 .grid-cell {
-    background: #fff;
+    background: white;
     border: 1px solid #e0e0e0;
     padding: 16px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
+    border-radius: 8px;
 }
 
 .header-cell {
-    background: #f8f9fa;
-    border-bottom: none;
+    background: #f5f7fa;
+    border: 1px solid #e0e0e0;
 }
 
 .fjc-title {
     font-size: 18px;
     font-weight: 800;
-    color: #2c3e50;
-    margin-bottom: 10px;
-    min-height: 45px;
+    margin-bottom: 6px;
 }
 
 .fjc-gg {
+    font-size: 14px;
     font-weight: 700;
     color: #145efc;
 }
 
 .meta-cell {
     font-size: 0.9rem;
-    color: #333;
-    min-height: 110px;
+    color: #444;
 }
 
 .meta-row {
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .section-cell {
-    border-left-width: 5px;
-    border-left-style: solid;
+    border-left-width: 5px !important;
+    border-left-style: solid !important;
     background: #fafafa;
 }
 
 .section-title {
     font-weight: 700;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .section-content {
-    font-size: 0.9rem;
-    color: #444;
+    font-size: 0.88rem;
     line-height: 1.45;
     white-space: pre-wrap;
 }
-
-.footer-cell {
-    height: 10px;
-    border: none;
-    background: transparent;
-}
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ==========================================================
-# FUNÇÕES
+# LOAD DATA
 # ==========================================================
 def normalize_grade(val):
     s = str(val).strip()
-    if s.lower() in ("nan", "none", "", "na", "-"):
+    if s.lower() in ("nan", "none", "", "-", "na"):
         return ""
     return re.sub(r"\.0$", "", s)
 
-# ==========================================================
-# CARREGAMENTO DOS ARQUIVOS
-# ==========================================================
-data = load_excel_data()
-df = data.get("job_profile", pd.DataFrame())
-levels = data.get("level_structure", pd.DataFrame())
+@st.cache_data
+def load_excel(path):
+    try:
+        df = pd.read_excel(path)
+        for c in df.columns:
+            df[c] = df[c].astype(str).str.strip()
+        return df
+    except:
+        return pd.DataFrame()
+
+df = load_excel("data/Job Profile.xlsx")
+levels = load_excel("data/Level Structure.xlsx")
 
 if df.empty:
     st.error("❌ Arquivo 'Job Profile.xlsx' não encontrado.")
     st.stop()
 
-# ==========================================================
-# NORMALIZAÇÃO DO JOB PROFILE
-# ==========================================================
-df = df.copy()
-df["Job Family"] = df["Job Family"].astype(str).str.strip()
-df["Sub Job Family"] = df["Sub Job Family"].astype(str).str.strip().replace(
-    ["nan", "None", "<NA>", ""], "-"
-)
-df["Career Path"] = df["Career Path"].astype(str).str.strip()
-
 df["Global Grade"] = df["Global Grade"].apply(normalize_grade)
 df["GG"] = df["Global Grade"]
 df["Global Grade Num"] = pd.to_numeric(df["Global Grade"], errors="coerce").fillna(0).astype(int)
 
-# ==========================================================
-# NORMALIZAÇÃO DO LEVELS — FIX DEFINITIVO
-# ==========================================================
 if not levels.empty:
+    levels.rename(columns=lambda x: x.strip(), inplace=True)
+    levels["Global Grade"] = levels["Global Grade"].apply(normalize_grade)
+    levels["Global Grade Num"] = pd.to_numeric(levels["Global Grade"], errors="coerce").fillna(0).astype(int)
 
-    # padroniza nomes das colunas
-    levels.columns = (
-        levels.columns.str.strip()
-        .str.lower()
-        .str.replace(" ", "_")
-        .str.replace("-", "_")
-    )
+# ==========================================================
+# IDENTIFICAÇÃO AUTOMÁTICA DA COLUNA "LEVEL NAME"
+# ==========================================================
+level_name_col = None
+for col in levels.columns:
+    if col.lower().replace(" ", "") in ["levelname", "level", "lvlname"]:
+        level_name_col = col
+        break
 
-    # tenta localizar a coluna de level name
-    if "level_name" not in levels.columns:
-        for c in levels.columns:
-            if "level" in c:
-                levels.rename(columns={c: "level_name"}, inplace=True)
-                break
-
-    # normaliza gg
-    if "global_grade" in levels.columns:
-        levels["global_grade"] = levels["global_grade"].apply(normalize_grade)
-        levels["gg_num"] = pd.to_numeric(
-            levels["global_grade"], errors="coerce"
-        ).fillna(0).astype(int)
-    else:
-        levels["gg_num"] = 0
+# fallback caso não exista nenhuma coluna válida
+if level_name_col is None:
+    level_name_col = levels.columns[-1]
 
 # ==========================================================
 # FILTROS
 # ==========================================================
-st.markdown("## Explorador de Perfis de Cargo")
+st.subheader("Explorador de Perfis de Cargo")
+
+familias = sorted(df["Job Family"].unique())
 
 col1, col2, col3 = st.columns(3)
-
 with col1:
-    fam = st.selectbox("Job Family", ["Todas"] + sorted(df["Job Family"].unique()))
+    familia = st.selectbox("Job Family", familias)
 
 with col2:
-    subs = sorted(df[df["Job Family"] == fam]["Sub Job Family"].unique()) if fam != "Todas" else []
-    sub = st.selectbox("Sub Job Family", ["Todas"] + subs)
+    subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].unique())
+    sub = st.selectbox("Sub Job Family", subs)
 
 with col3:
-    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].unique()) if sub != "Todas" else []
-    path = st.selectbox("Career Path", ["Todas"] + paths)
+    paths = sorted(df[(df["Job Family"] == familia) & (df["Sub Job Family"] == sub)]["Career Path"].unique())
+    trilha = st.selectbox("Career Path", paths)
 
-filtered = df.copy()
-if fam != "Todas":
-    filtered = filtered[filtered["Job Family"] == fam]
-if sub != "Todas":
-    filtered = filtered[filtered["Sub Job Family"] == sub]
-if path != "Todas":
-    filtered = filtered[filtered["Career Path"] == path]
+filtered = df[
+    (df["Job Family"] == familia)
+    & (df["Sub Job Family"] == sub)
+    & (df["Career Path"] == trilha)
+]
 
-if filtered.empty:
-    st.info("Ajuste os filtros para visualizar perfis.")
-    st.stop()
-
-# ==========================================================
-# MULTISELECT (GG + Cargo)
-# ==========================================================
 filtered["label"] = filtered.apply(
     lambda r: f"GG {r['GG']} • {r['Job Profile']}", axis=1
 )
-mapping = dict(zip(filtered["label"], filtered["Job Profile"]))
+
+label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selecionados_labels = st.multiselect(
     "Selecione até 3 perfis para comparar:",
-    options=list(mapping.keys()),
+    options=list(label_to_profile.keys()),
     max_selections=3,
 )
 
 if not selecionados_labels:
     st.stop()
 
-selecionados = [mapping[l] for l in selecionados_labels]
+selecionados = [label_to_profile[l] for l in selecionados_labels]
 
 # ==========================================================
-# EXTRAÇÃO DOS CARDS
-# ==========================================================
-cards_data = []
-for job in selecionados:
-
-    row = filtered[filtered["Job Profile"] == job]
-    if row.empty:
-        continue
-
-    row = row.iloc[0].copy()
-    gg_num = int(row["Global Grade Num"])
-
-    # level name
-    lvl = ""
-    if not levels.empty and "level_name" in levels.columns:
-        match = levels[levels["gg_num"] == gg_num]
-        if not match.empty:
-            lvl = match["level_name"].iloc[0]
-
-    cards_data.append({"row": row, "level": lvl})
-
-if not cards_data:
-    st.warning("Não foi possível carregar os perfis selecionados.")
-    st.stop()
-
-# ==========================================================
-# GRID DE COMPARAÇÃO
+# CARDS
 # ==========================================================
 st.markdown("## Comparação de Perfis")
 
-cols = len(cards_data)
-grid_style = f"grid-template-columns: repeat({cols}, 1fr);"
+cards = []
+for nome in selecionados:
+    row = filtered[filtered["Job Profile"] == nome].iloc[0]
 
-html_grid = f'<div class="comparison-grid" style="{grid_style}">'
+    gg_num = int(row["Global Grade Num"])
+    match = levels[levels["Global Grade Num"] == gg_num]
 
-# Cabeçalho
-for card in cards_data:
-    r = card["row"]
-    lvl = card["level"]
+    level_name = ""
+    if not match.empty and level_name_col in match.columns:
+        level_name = match[level_name_col].iloc[0]
 
-    html_grid += f"""
+    cards.append(
+        {
+            "row": row,
+            "level": level_name,
+        }
+    )
+
+# ==========================================================
+# GRID
+# ==========================================================
+n = len(cards)
+grid = f'<div class="comparison-grid" style="grid-template-columns: repeat({n}, 1fr);">'
+
+# HEADERS
+for c in cards:
+    grid += f"""
     <div class="grid-cell header-cell">
-        <div class="fjc-title">{html.escape(r['Job Profile'])}</div>
-        <div class="fjc-gg">GG {r['GG']} • {lvl}</div>
+        <div class="fjc-title">{html.escape(c['row']['Job Profile'])}</div>
+        <div class="fjc-gg">GG {c['row']['Global Grade']} • {html.escape(c['level'])}</div>
     </div>
     """
 
-# Metadados
-for card in cards_data:
-    r = card["row"]
-
-    meta = f"""
-        <div class="meta-row"><strong>Família:</strong> {html.escape(r["Job Family"])}</div>
-        <div class="meta-row"><strong>Sub-Família:</strong> {html.escape(r["Sub Job Family"])}</div>
-        <div class="meta-row"><strong>Carreira:</strong> {html.escape(r["Career Path"])}</div>
+# META
+for c in cards:
+    r = c["row"]
+    grid += f"""
+    <div class="grid-cell meta-cell">
+        <div class="meta-row"><strong>Família:</strong> {html.escape(r['Job Family'])}</div>
+        <div class="meta-row"><strong>Sub-Família:</strong> {html.escape(r['Sub Job Family'])}</div>
+        <div class="meta-row"><strong>Carreira:</strong> {html.escape(r['Career Path'])}</div>
+    </div>
     """
 
-    html_grid += f'<div class="grid-cell meta-cell">{meta}</div>'
-
-# Seções do conteúdo
+# CONFIG DAS SEÇÕES
 sections = [
     ("🧭 Sub Job Family Description", "Sub Job Family Description", "#95a5a6"),
     ("🧠 Job Profile Description", "Job Profile Description", "#e91e63"),
@@ -294,24 +251,20 @@ sections = [
     ("🎓 Qualifications", "Qualifications", "#009688"),
 ]
 
+# CONTEÚDO DAS SEÇÕES
 for title, field, color in sections:
-    for card in cards_data:
-        text = str(card["row"].get(field, "")).strip()
-
-        if text == "" or text.lower() == "nan":
-            html_grid += "<div class='grid-cell section-cell' style='background:transparent;border:none;'></div>"
+    for c in cards:
+        content = str(c["row"].get(field, "")).strip()
+        if content in ["", "nan", "None"]:
+            grid += "<div class='grid-cell'></div>"
         else:
-            html_grid += f"""
+            grid += f"""
             <div class="grid-cell section-cell" style="border-left-color:{color};">
                 <div class="section-title" style="color:{color};">{title}</div>
-                <div class="section-content">{html.escape(text)}</div>
+                <div class="section-content">{html.escape(content)}</div>
             </div>
             """
 
-# Rodapé
-for _ in cards_data:
-    html_grid += "<div class='grid-cell footer-cell'></div>"
+grid += "</div>"
 
-html_grid += "</div>"
-
-st.markdown(html_grid, unsafe_allow_html=True)
+st.markdown(grid, unsafe_allow_html=True)
