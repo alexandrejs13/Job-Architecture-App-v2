@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
-import re
 import html
 
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ==========================================================
-# HEADER NOVO (mantido igual ao app novo)
+# HEADER PADRÃO DO NOVO APP
 # ==========================================================
 def header(icon_path, title):
     col1, col2 = st.columns([0.08, 0.92])
@@ -19,252 +18,201 @@ def header(icon_path, title):
                 {title}
             </h1>
             """,
-            unsafe_allow_html=True,
+            unsafe_allow_html=True
         )
     st.markdown("<hr style='margin-top:5px;'>", unsafe_allow_html=True)
 
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# CSS — fundo branco e layout igual ao app novo
+# CSS — Identidade Visual Atual SIG
 # ==========================================================
-st.markdown(
-    """
+st.markdown("""
 <style>
+
+:root {
+    --sig-blue: #145efc;
+    --sig-sand1: #f5f3f0;
+    --border: #d9d9d9;
+}
+
+/* fundo geral branco */
 [data-testid="stAppViewContainer"] {
-    background-color: white !important;
+    background: #ffffff !important;
 }
 
+/* container largo */
 .block-container {
-    padding-top: 1rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    max-width: 95% !important;
 }
 
-/* GRID */
-.comparison-grid {
+/* GRID DE CARDS (1,2,3 colunas dinâmico) */
+.jp-grid {
     display: grid;
     gap: 22px;
-    margin-top: 25px;
+    margin-top: 10px;
 }
 
-.grid-cell {
-    background: white;
-    border: 1px solid #e0e0e0;
-    padding: 16px;
-    border-radius: 8px;
+/* CARD PRINCIPAL */
+.jp-card {
+    background: var(--sig-sand1);
+    padding: 18px 22px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
 }
 
-.header-cell {
-    background: #f5f7fa;
-    border: 1px solid #e0e0e0;
+/* título do card */
+.jp-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
 }
 
-.fjc-title {
+/* GG em azul */
+.jp-gg {
+    color: var(--sig-blue);
     font-size: 18px;
     font-weight: 800;
+    margin-bottom: 16px;
+}
+
+/* bloco de metadados */
+.jp-meta-block {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #eee;
+    margin-bottom: 18px;
+}
+
+.jp-meta-row {
+    font-size: 15px;
     margin-bottom: 6px;
 }
 
-.fjc-gg {
-    font-size: 14px;
-    font-weight: 700;
-    color: #145efc;
+/* seções longas */
+.jp-section {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left-width: 6px;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
 }
 
-.meta-cell {
-    font-size: 0.9rem;
-    color: #444;
-}
-
-.meta-row {
-    margin-bottom: 6px;
-}
-
-.section-cell {
-    border-left-width: 5px !important;
-    border-left-style: solid !important;
-    background: #fafafa;
-}
-
-.section-title {
+.jp-section-title {
+    font-size: 17px;
     font-weight: 700;
     margin-bottom: 8px;
 }
 
-.section-content {
-    font-size: 0.88rem;
+.jp-text {
+    font-size: 15px;
     line-height: 1.45;
     white-space: pre-wrap;
 }
+
 </style>
-""",
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
 
 # ==========================================================
-# LOAD DATA
+# CARREGAR ARQUIVO Job Profile.xlsx
 # ==========================================================
-def normalize_grade(val):
-    s = str(val).strip()
-    if s.lower() in ("nan", "none", "", "-", "na"):
-        return ""
-    return re.sub(r"\.0$", "", s)
-
 @st.cache_data
-def load_excel(path):
-    try:
-        df = pd.read_excel(path)
-        for c in df.columns:
-            df[c] = df[c].astype(str).str.strip()
-        return df
-    except:
-        return pd.DataFrame()
+def load_df():
+    df = pd.read_excel("data/Job Profile.xlsx")
+    df = df.fillna("")
+    for c in df.columns:
+        df[c] = df[c].astype(str)
+    return df
 
-df = load_excel("data/Job Profile.xlsx")
-levels = load_excel("data/Level Structure.xlsx")
+df = load_df()
 
-if df.empty:
-    st.error("❌ Arquivo 'Job Profile.xlsx' não encontrado.")
-    st.stop()
-
-df["Global Grade"] = df["Global Grade"].apply(normalize_grade)
-df["GG"] = df["Global Grade"]
-df["Global Grade Num"] = pd.to_numeric(df["Global Grade"], errors="coerce").fillna(0).astype(int)
-
-if not levels.empty:
-    levels.rename(columns=lambda x: x.strip(), inplace=True)
-    levels["Global Grade"] = levels["Global Grade"].apply(normalize_grade)
-    levels["Global Grade Num"] = pd.to_numeric(levels["Global Grade"], errors="coerce").fillna(0).astype(int)
-
-# ==========================================================
-# IDENTIFICAÇÃO AUTOMÁTICA DA COLUNA "LEVEL NAME"
-# ==========================================================
-level_name_col = None
-for col in levels.columns:
-    if col.lower().replace(" ", "") in ["levelname", "level", "lvlname"]:
-        level_name_col = col
-        break
-
-# fallback caso não exista nenhuma coluna válida
-if level_name_col is None:
-    level_name_col = levels.columns[-1]
+# Campos principais
+CAMPO_TEXTO = [
+    ("Sub Job Family Description", "🧭 Sub Job Family Description"),
+    ("Job Profile Description", "🧠 Job Profile Description"),
+    ("Career Band Description", "🏛️ Career Band Description"),
+    ("Role Description", "🎯 Role Description"),
+    ("Grade Differentiator", "🏅 Grade Differentiator"),
+    ("Qualifications", "🎓 Qualifications"),
+    ("Specific parameters / KPIs", "📌 Specific parameters / KPIs"),
+    ("Competencies 1", "⚙️ Competencies 1"),
+    ("Competencies 2", "⚙️ Competencies 2"),
+    ("Competencies 3", "⚙️ Competencies 3"),
+]
 
 # ==========================================================
 # FILTROS
 # ==========================================================
-st.subheader("Explorador de Perfis de Cargo")
+st.markdown("### 🔍 Selecione o perfil para visualizar ou comparar")
 
 familias = sorted(df["Job Family"].unique())
-
 col1, col2, col3 = st.columns(3)
+
 with col1:
-    familia = st.selectbox("Job Family", familias)
+    fam = st.selectbox("Job Family", ["Selecione…"] + familias)
 
 with col2:
-    subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].unique())
-    sub = st.selectbox("Sub Job Family", subs)
+    subs = sorted(df[df["Job Family"] == fam]["Sub Job Family"].unique()) if fam != "Selecione…" else []
+    subfam = st.selectbox("Sub Family", ["Selecione…"] + subs)
 
 with col3:
-    paths = sorted(df[(df["Job Family"] == familia) & (df["Sub Job Family"] == sub)]["Career Path"].unique())
-    trilha = st.selectbox("Career Path", paths)
+    roles = sorted(df[df["Sub Job Family"] == subfam]["Job Profile"].unique()) if subfam != "Selecione…" else []
+    selected_profiles = st.multiselect("Selecione até 3 perfis", roles, max_selections=3)
 
-filtered = df[
-    (df["Job Family"] == familia)
-    & (df["Sub Job Family"] == sub)
-    & (df["Career Path"] == trilha)
-]
-
-filtered["label"] = filtered.apply(
-    lambda r: f"GG {r['GG']} • {r['Job Profile']}", axis=1
-)
-
-label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
-
-selecionados_labels = st.multiselect(
-    "Selecione até 3 perfis para comparar:",
-    options=list(label_to_profile.keys()),
-    max_selections=3,
-)
-
-if not selecionados_labels:
+if not selected_profiles:
+    st.info("Selecione ao menos 1 perfil.")
     st.stop()
 
-selecionados = [label_to_profile[l] for l in selecionados_labels]
+# ==========================================================
+# GRID DINÂMICO
+# ==========================================================
+n = len(selected_profiles)
+grid_css = f"grid-template-columns: repeat({n}, 1fr);"
+st.markdown(f'<div class="jp-grid" style="{grid_css}">', unsafe_allow_html=True)
 
 # ==========================================================
-# CARDS
+# RENDERIZA CADA PERFIL
 # ==========================================================
-st.markdown("## Comparação de Perfis")
+for prof in selected_profiles:
 
-cards = []
-for nome in selecionados:
-    row = filtered[filtered["Job Profile"] == nome].iloc[0]
+    row = df[df["Job Profile"] == prof].iloc[0]
 
-    gg_num = int(row["Global Grade Num"])
-    match = levels[levels["Global Grade Num"] == gg_num]
+    # HEADER DO CARD
+    st.markdown("""
+    <div class="jp-card">
+        <div class="jp-title">""" + html.escape(row["Job Profile"]) + """</div>
+        <div class="jp-gg">GG """ + html.escape(row["Global Grade"]) + """</div>
+    """, unsafe_allow_html=True)
 
-    level_name = ""
-    if not match.empty and level_name_col in match.columns:
-        level_name = match[level_name_col].iloc[0]
+    # METADATA
+    st.markdown("""
+        <div class="jp-meta-block">
+            <div class="jp-meta-row"><b>Job Family:</b> """ + html.escape(row["Job Family"]) + """</div>
+            <div class="jp-meta-row"><b>Sub Job Family:</b> """ + html.escape(row["Sub Job Family"]) + """</div>
+            <div class="jp-meta-row"><b>Career Path:</b> """ + html.escape(row["Career Path"]) + """</div>
+            <div class="jp-meta-row"><b>Full Job Code:</b> """ + html.escape(row["Full Job Code"]) + """</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    cards.append(
-        {
-            "row": row,
-            "level": level_name,
-        }
-    )
-
-# ==========================================================
-# GRID
-# ==========================================================
-n = len(cards)
-grid = f'<div class="comparison-grid" style="grid-template-columns: repeat({n}, 1fr);">'
-
-# HEADERS
-for c in cards:
-    grid += f"""
-    <div class="grid-cell header-cell">
-        <div class="fjc-title">{html.escape(c['row']['Job Profile'])}</div>
-        <div class="fjc-gg">GG {c['row']['Global Grade']} • {html.escape(c['level'])}</div>
-    </div>
-    """
-
-# META
-for c in cards:
-    r = c["row"]
-    grid += f"""
-    <div class="grid-cell meta-cell">
-        <div class="meta-row"><strong>Família:</strong> {html.escape(r['Job Family'])}</div>
-        <div class="meta-row"><strong>Sub-Família:</strong> {html.escape(r['Sub Job Family'])}</div>
-        <div class="meta-row"><strong>Carreira:</strong> {html.escape(r['Career Path'])}</div>
-    </div>
-    """
-
-# CONFIG DAS SEÇÕES
-sections = [
-    ("🧭 Sub Job Family Description", "Sub Job Family Description", "#95a5a6"),
-    ("🧠 Job Profile Description", "Job Profile Description", "#e91e63"),
-    ("🏛️ Career Band Description", "Career Band Description", "#673ab7"),
-    ("🎯 Role Description", "Role Description", "#145efc"),
-    ("🏅 Grade Differentiator", "Grade Differentiator", "#ff9800"),
-    ("🎓 Qualifications", "Qualifications", "#009688"),
-]
-
-# CONTEÚDO DAS SEÇÕES
-for title, field, color in sections:
-    for c in cards:
-        content = str(c["row"].get(field, "")).strip()
-        if content in ["", "nan", "None"]:
-            grid += "<div class='grid-cell'></div>"
+    # SEÇÕES LONGAS
+    for col, titulo in CAMPO_TEXTO:
+        txt = row[col].strip()
+        if len(txt) > 0:
+            st.markdown(
+                f"""
+                <div class="jp-section">
+                    <div class="jp-section-title">{titulo}</div>
+                    <div class="jp-text">{html.escape(txt)}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         else:
-            grid += f"""
-            <div class="grid-cell section-cell" style="border-left-color:{color};">
-                <div class="section-title" style="color:{color};">{title}</div>
-                <div class="section-content">{html.escape(content)}</div>
-            </div>
-            """
+            st.markdown("<div></div>", unsafe_allow_html=True)
 
-grid += "</div>"
+    st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown(grid, unsafe_allow_html=True)
+# fecha grid
+st.markdown("</div>", unsafe_allow_html=True)
