@@ -1,5 +1,6 @@
 # pages/4_Job_Maps.py
-# Layout Final – cards 100px, coluna GG 100px, fullscreen perfeito, botões alinhados
+# Layout Final – cards 100px, coluna GG 100px, tudo alinhado, fullscreen SIG BLUE
+# (botões abaixo da coluna GG, sem mexer no mapa)
 
 import streamlit as st
 import pandas as pd
@@ -28,7 +29,7 @@ def header(icon_path: str, title: str):
 header("assets/icons/globe_trade.png", "Job Maps")
 
 # ==========================================================
-# CSS FINAL — LAYOUT INTACTO
+# CSS FINAL — cards 100px + coluna GG 100px
 # ==========================================================
 css = """
 <style>
@@ -58,7 +59,7 @@ css = """
 }
 
 /* ================================ */
-/* FAMÍLIA */
+/* FAMÍLIA (55px) */
 /* ================================ */
 .header-family {
     background: var(--family-bg);
@@ -76,7 +77,9 @@ css = """
     text-align:center;
 }
 
-/* SUBFAMÍLIA */
+/* ===================================== */
+/* SUBFAMÍLIA (44–65px dinâmico) */
+/* ===================================== */
 .header-subfamily {
     background: var(--subfamily-bg);
     color: #222;
@@ -92,6 +95,7 @@ css = """
     z-index: 9;
     border-right: 1px solid var(--border);
     text-align: center;
+    line-height: 1.15;
     white-space: normal;
 }
 
@@ -130,7 +134,9 @@ css = """
     border-bottom: 1px solid white;
 }
 
-/* CELLS */
+/* ============================== */
+/* CÉLULAS — alinhamento perfeito */
+/* ============================== */
 .cell {
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -141,7 +147,9 @@ css = """
     align-items: center;
 }
 
-/* CARD FINAL — ALTURA 100px */
+/* ========================================= */
+/* CARD FINAL — ALTURA 100px (reduzido) */
+/* ========================================= */
 .job-card {
     background: white;
     border: 1px solid var(--border);
@@ -168,30 +176,19 @@ css = """
     line-height: 1.1;
 }
 
-/* BOTÕES – exatamente 100px */
-.full-btn {
+/* BOTÕES STREAMLIT COMO PÍLULA SIG BLUE */
+.stButton > button {
     background: var(--sig-blue) !important;
     color: white !important;
-    border-radius: 26px !important;
-    padding: 10px 0px !important;
+    border-radius: 28px !important;
+    padding: 10px 22px !important;
     font-weight: 700 !important;
     border: none !important;
-    width: 100px !important;      /* ← EXATAMENTE igual à coluna GG */
-    text-align: center !important;
 }
 
-.full-btn:hover {
-    background: #0d4ccc !important;
-}
-
-.button-wrapper {
-    margin-top: 14px;
-    margin-bottom: 14px;
-    width: 100px !important;     /* ← alinhamento perfeito */
-}
-
-.fullscreen-container {
-    padding: 1.5rem !important;
+/* margem extra entre mapa e botão */
+.button-spacer {
+    height: 16px;
 }
 
 </style>
@@ -211,21 +208,24 @@ if df.empty:
 
 df = df.copy()
 df["Job Family"] = df["Job Family"].astype(str).str.strip()
-df["Sub Job Family"] = df["Sub Job Family"].astype(str).str.strip().replace(['nan','None','<NA>',''], '-')
+df["Sub Job Family"] = (
+    df["Sub Job Family"].astype(str).str.strip().replace(['nan','None','<NA>',''], '-')
+)
 df["Career Path"] = df["Career Path"].astype(str).str.strip()
 df["Global Grade"] = df["Global Grade"].astype(str).str.replace(r"\.0$","",regex=True)
-
 
 # ==========================================================
 # CORES SIG
 # ==========================================================
 def get_path_color(path):
     p = str(path).lower()
-    if "manage" in p or "executive" in p: return "#00493b"
-    if "professional" in p: return "#73706d"
-    if "tech" in p or "support" in p: return "#a09b05"
+    if "manage" in p or "executive" in p: 
+        return "#00493b"
+    if "professional" in p: 
+        return "#73706d"
+    if "tech" in p or "support" in p: 
+        return "#a09b05"
     return "#145efc"
-
 
 # ==========================================================
 # FILTROS
@@ -240,13 +240,13 @@ if fam_filter != "Todas":
 if path_filter != "Todas":
     df_flt = df_flt[df_flt["Career Path"] == path_filter]
 
-
 # ==========================================================
-# GERA MAPA FINAL (layout intacto)
+# GERA MAPA FINAL (SEM ALTERAR)
 # ==========================================================
 @st.cache_data(ttl=600)
 def generate_map(df):
 
+    # ordenar famílias pelo maior GG
     fam_max = (
         df.groupby("Job Family")["Global Grade"]
         .apply(lambda x: max(int(g) for g in x if str(g).isdigit()))
@@ -254,18 +254,20 @@ def generate_map(df):
     )
     families_order = fam_max.index.tolist()
 
+    # ordenar subfamílias pelo maior GG
     submap_ordered = {}
     for fam in families_order:
         tmp = (
             df[df["Job Family"] == fam]
-              .groupby("Sub Job Family")["Global Grade"]
-              .apply(lambda x: max(int(g) for g in x if str(g).isdigit()))
-              .sort_values(ascending=False)
+            .groupby("Sub Job Family")["Global Grade"]
+            .apply(lambda x: max(int(g) for g in x if str(g).isdigit()))
+            .sort_values(ascending=False)
         )
         submap_ordered[fam] = tmp.index.tolist()
 
     grades = sorted(df["Global Grade"].unique(), key=lambda x: int(x), reverse=True)
 
+    # colunas
     submap = {}
     col_index = 2
     for fam in families_order:
@@ -279,8 +281,10 @@ def generate_map(df):
     html = []
     html.append("<div class='map-wrapper'><div class='jobmap-grid'>")
 
+    # GG header
     html.append("<div class='gg-header' style='grid-column:1; grid-row:1 / span 2;'>GG</div>")
 
+    # famílias
     col = 2
     for fam in families_order:
         subs = submap_ordered[fam]
@@ -288,17 +292,19 @@ def generate_map(df):
         html.append(f"<div class='header-family' style='grid-column:{col} / span {span};'>{fam}</div>")
         col += span
 
+    # subfamílias
     for (fam, sub), c in submap.items():
         html.append(f"<div class='header-subfamily' style='grid-column:{c};'>{sub}</div>")
 
+    # células por GG
     row = 3
     for g in grades:
-
         html.append(f"<div class='gg-cell' style='grid-row:{row};'>GG {g}</div>")
 
         for (fam, sub), c_idx in submap.items():
             recs = cards.get((fam, sub, g), [])
             cell = ""
+
             for r in recs:
                 color = get_path_color(r["Career Path"])
                 cell += (
@@ -307,50 +313,61 @@ def generate_map(df):
                     f"<span>{r['Career Path']} – GG {g}</span>"
                     "</div>"
                 )
-            html.append(f"<div class='cell' style='grid-column:{c_idx}; grid-row:{row};'>{cell}</div>")
+
+            html.append(
+                f"<div class='cell' style='grid-column:{c_idx}; grid-row:{row};'>{cell}</div>"
+            )
 
         row += 1
 
     html.append("</div></div>")
     return "".join(html)
 
-
-content = generate_map(df_flt)
-
+# Renderiza o mapa
+st.markdown(generate_map(df_flt), unsafe_allow_html=True)
 
 # ==========================================================
-# FULLSCREEN — PERFEITO E SEM ERROS
+# FULLSCREEN FINAL — SIG BLUE (BOTÃO ABAIXO, ALINHADO AO GG)
 # ==========================================================
 if "fs" not in st.session_state:
     st.session_state.fs = False
 
-button_area = st.container()
+# pequeno espaço entre mapa e botão
+st.markdown("<div class='button-spacer'></div>", unsafe_allow_html=True)
 
-# -------- ENTRAR NO FULLSCREEN --------
+# coluna estreita ~ largura do GG para alinhar o botão
+btn_col, _ = st.columns([0.13, 0.87])  # 0.13 ≈ 100px proporcional
+
 if not st.session_state.fs:
-
-    with button_area:
-        st.markdown(
-            "<div class='button-wrapper'>"
-            "<button class='full-btn' onclick='window.parent.location.reload()'>Tela Cheia</button>"
-            "</div>",
-            unsafe_allow_html=True
-        )
-
-    st.session_state.fs = True
-    st.rerun()
-
-# -------- MODO FULLSCREEN --------
+    # Botão "Tela Cheia"
+    with btn_col:
+        if st.button("Tela Cheia"):
+            st.session_state.fs = True
+            st.rerun()
 else:
+    # ESC para sair
+    components.html(
+        """
+        <script>
+            document.addEventListener('keydown', (e)=>{
+                if(e.key === 'Escape'){
+                    const btns = window.parent.document.querySelectorAll('button');
+                    for (const b of btns){
+                        if (b.innerText.trim() === 'Sair'){
+                            b.click();
+                            break;
+                        }
+                    }
+                }
+            });
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
 
-    st.markdown("<div class='fullscreen-container'>", unsafe_allow_html=True)
-    st.markdown(content, unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    with button_area:
-        st.markdown(
-            "<div class='button-wrapper'>"
-            "<button class='full-btn' onclick='window.parent.location.reload()'>Sair</button>"
-            "</div>",
-            unsafe_allow_html=True
-        )
+    # Botão "Sair" no mesmo lugar
+    with btn_col:
+        if st.button("Sair"):
+            st.session_state.fs = False
+            st.rerun()
