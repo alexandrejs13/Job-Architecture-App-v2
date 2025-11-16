@@ -1,6 +1,5 @@
 # pages/4_Job_Maps.py
-# Versão FINAL – fullscreen funcional, botões SIG BLUE abaixo da coluna GG,
-# cards 100px, coluna GG 100px, margens fullscreen, ordenação carreira, layout intacto.
+# VERSÃO FINAL — Botão 100px alinhado ao GG, fullscreen perfeito, layout intacto.
 
 import streamlit as st
 import pandas as pd
@@ -8,12 +7,12 @@ import streamlit.components.v1 as components
 from utils.data_loader import load_excel_data
 
 # ==========================================================
-# CONFIG DA PÁGINA
+# CONFIG
 # ==========================================================
 st.set_page_config(page_title="Job Maps", layout="wide")
 
 # ==========================================================
-# HEADER CLEAN
+# HEADER
 # ==========================================================
 def header(icon_path: str, title: str):
     col1, col2 = st.columns([0.08, 0.92])
@@ -42,7 +41,7 @@ css = """
     --sig-blue: #145efc;
 }
 
-/* FULLSCREEN WRAPPER */
+/* FULLSCREEN */
 .fullscreen-container {
     padding: 1.5rem !important;
 }
@@ -52,7 +51,7 @@ css = """
     height: 75vh;
     overflow: auto;
     border-radius: 10px;
-    border: 0.5px solid var(--border);
+    border: .5px solid var(--border);
     background: white;
 }
 
@@ -60,134 +59,121 @@ css = """
 .jobmap-grid {
     display: grid;
     width: max-content;
-    font-size: 0.88rem;
-}
-
-/* FAMÍLIA */
-.header-family {
-    background: var(--family-bg);
-    color: white;
-    height: 55px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-right: 1px solid white;
-    padding: 0px 6px;
-    text-align:center;
-}
-
-/* SUBFAMÍLIA */
-.header-subfamily {
-    background: var(--subfamily-bg);
-    color: #222;
-    min-height: 44px !important;
-    max-height: 65px !important;
-    padding: 4px 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: sticky;
-    top: 55px;
-    left: 100px !important;
-    z-index: 9;
-    border-right: 1px solid var(--border);
-    text-align: center;
-    line-height: 1.15;
-    white-space: normal;
+    font-size: .88rem;
 }
 
 /* COLUNA GG — 100px */
 .gg-header {
-    background: var(--gg-bg);
-    color: white;
-    font-weight: 800;
     width: 100px !important;
     min-width: 100px !important;
     max-width: 100px !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: var(--gg-bg);
+    color: white;
+    font-weight: 800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     position: sticky;
     left: 0;
     top: 0;
     z-index: 30;
-    border-bottom: 1px solid white;
 }
 
 .gg-cell {
-    background: var(--gg-bg);
-    color: white;
     width: 100px !important;
     min-width: 100px !important;
     max-width: 100px !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: var(--gg-bg);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     position: sticky;
-    left: 0;
-    z-index: 25;
-    border-bottom: 1px solid white;
+    left:0;
+    z-index:25;
+}
+
+/* FAMÍLIA */
+.header-family {
+    height:55px !important;
+    background: var(--family-bg);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    position:sticky;
+    top:0;
+    border-right:1px solid white;
+}
+
+/* SUBFAMÍLIA */
+.header-subfamily {
+    min-height:44px !important;
+    max-height:65px !important;
+    background: var(--subfamily-bg);
+    text-align:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:sticky;
+    top:55px;
+    left:100px !important;
+    border-right:1px solid var(--border);
 }
 
 /* CELLS */
 .cell {
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
+    padding:10px;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
 }
 
 /* CARD 100px */
 .job-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-left-width: 4px !important;
-    border-radius: 6px;
-    padding: 10px;
-    width: 180px;
-    min-height: 100px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-
-.job-card b {
-    font-size: 0.80rem;
-    color: #222;
+    width:180px;
+    min-height:100px;
+    padding:10px;
+    background:white;
+    border:1px solid var(--border);
+    border-left-width:4px !important;
+    border-radius:6px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:4px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
 }
 
 .job-card span {
-    font-size: 0.74rem;
+    font-size:.74rem;
     color: var(--sig-blue);
-    line-height: 1.1;
+    line-height:1.1;
 }
 
-/* BUTTONS – SIG BLUE */
+/* BOTÕES — 100px ALINHADO AO GG */
+.gg-button-wrapper {
+    width:100px !important;
+    margin-top:18px;
+    margin-bottom:18px;
+}
+
 .full-btn {
-    background: var(--sig-blue) !important;
-    color: white !important;
-    border-radius: 26px !important;
-    padding: 10px 22px !important;
-    font-weight: 700 !important;
-    border: none !important;
+    width:100px !important;
+    background:var(--sig-blue) !important;
+    color:white !important;
+    border:none !important;
+    border-radius:26px !important;
+    padding:10px 0 !important;
+    font-weight:700 !important;
+    text-align:center;
 }
 .full-btn:hover {
-    background: #0d4ccc !important;
-}
-
-/* BOTÕES ABAIXO DA TABELA */
-.button-wrapper {
-    margin-top: 22px;
-    margin-bottom: 22px;
+    background:#0d4ccc !important;
 }
 
 </style>
@@ -195,7 +181,7 @@ css = """
 st.markdown(css, unsafe_allow_html=True)
 
 # ==========================================================
-# CARREGAR DADOS
+# DADOS
 # ==========================================================
 data = load_excel_data()
 df = data.get("job_profile", pd.DataFrame())
@@ -204,14 +190,13 @@ if df.empty:
     st.error("Arquivo Job Profile não encontrado.")
     st.stop()
 
-df = df.copy()
 df["Job Family"] = df["Job Family"].astype(str).str.strip()
 df["Sub Job Family"] = df["Sub Job Family"].astype(str).str.strip().replace(['nan','None','<NA>',''], '-')
 df["Career Path"] = df["Career Path"].astype(str).str.strip()
 df["Global Grade"] = df["Global Grade"].astype(str).str.replace(r"\.0$","",regex=True)
 
 # ==========================================================
-# CORES SIG
+# Cores SIG
 # ==========================================================
 def get_path_color(path):
     p = str(path).lower()
@@ -221,7 +206,7 @@ def get_path_color(path):
     return "#145efc"
 
 # ==========================================================
-# ORDEM DE CARREIRA
+# Ordem Career Path
 # ==========================================================
 def sort_key(rec):
     p = rec["Career Path"].lower()
@@ -244,7 +229,7 @@ if path_filter != "Todas":
     df_flt = df_flt[df_flt["Career Path"] == path_filter]
 
 # ==========================================================
-# GERA MAPA FINAL
+# GERA MAPA
 # ==========================================================
 @st.cache_data(ttl=600)
 def generate_map(df):
@@ -275,10 +260,10 @@ def generate_map(df):
             submap[(fam, sf)] = col_index
             col_index += 1
 
-    grouped = df.groupby(["Job Family", "Sub Job Family", "Global Grade"])
-    cards = {k: v.to_dict("records") for k, v in grouped}
+    grouped = df.groupby(["Job Family","Sub Job Family","Global Grade"])
+    cards = {k: v.to_dict("records") for k,v in grouped}
 
-    html = []
+    html=[]
     html.append("<div class='map-wrapper'><div class='jobmap-grid'>")
 
     html.append("<div class='gg-header' style='grid-column:1; grid-row:1 / span 2;'>GG</div>")
@@ -286,34 +271,32 @@ def generate_map(df):
     col = 2
     for fam in families_order:
         subs = submap_ordered[fam]
-        span = len(subs)
+        span=len(subs)
         html.append(f"<div class='header-family' style='grid-column:{col} / span {span};'>{fam}</div>")
         col += span
 
-    for (fam, sub), c in submap.items():
+    for (fam,sub),c in submap.items():
         html.append(f"<div class='header-subfamily' style='grid-column:{c};'>{sub}</div>")
 
     row = 3
     for g in grades:
         html.append(f"<div class='gg-cell' style='grid-row:{row};'>GG {g}</div>")
-
-        for (fam, sub), c_idx in submap.items():
-            recs = cards.get((fam, sub, g), [])
+        for (fam,sub),c_idx in submap.items():
+            recs = cards.get((fam,sub,g), [])
             recs_sorted = sorted(recs, key=sort_key)
 
-            cell = ""
+            cell=""
             for r in recs_sorted:
                 color = get_path_color(r["Career Path"])
-                cell += (
-                    f"<div class='job-card' style='border-left-color:{color};'>"
-                    f"<b>{r['Job Profile']}</b>"
-                    f"<span>{r['Career Path']} – GG {g}</span>"
-                    "</div>"
-                )
+                cell += f"""
+                <div class='job-card' style='border-left-color:{color};'>
+                    <b>{r['Job Profile']}</b>
+                    <span>{r['Career Path']} – GG {g}</span>
+                </div>
+                """
 
             html.append(f"<div class='cell' style='grid-column:{c_idx}; grid-row:{row};'>{cell}</div>")
-
-        row += 1
+        row+=1
 
     html.append("</div></div>")
     return "".join(html)
@@ -321,76 +304,29 @@ def generate_map(df):
 content = generate_map(df_flt)
 
 # ==========================================================
-# FULLSCREEN FINAL — FUNCIONAL E ABAIXO DA TABELA
+# FULLSCREEN
 # ==========================================================
-
-# estado
 if "fs" not in st.session_state:
     st.session_state.fs = False
 
-# render tabela
-st.markdown(content, unsafe_allow_html=True)
+# BOTÃO ABAIXO DA COLUNA GG
+st.markdown("<div class='gg-button-wrapper'>", unsafe_allow_html=True)
 
-# container dos botões (ABAIXO da tabela)
-button_area = st.container()
-
-# ----------------------------------------------------------
-# BOTÃO: TELA CHEIA
-# ----------------------------------------------------------
 if not st.session_state.fs:
-
-    with button_area:
-        st.markdown("""
-        <div class='button-wrapper'>
-            <button class='full-btn' id='enter-btn'>Tela Cheia</button>
-        </div>
-
-        <script>
-            document.getElementById("enter-btn").onclick = function() {
-                fetch("/_toggle_fs?mode=enter")
-                .then(() => window.parent.location.reload());
-            }
-        </script>
-        """, unsafe_allow_html=True)
-
-# ----------------------------------------------------------
-# FULLSCREEN MODE
-# ----------------------------------------------------------
+    if st.button("Tela Cheia", key="enter_full", use_container_width=True):
+        st.session_state.fs = True
+        st.rerun()
 else:
+    if st.button("Sair", key="exit_full", use_container_width=True):
+        st.session_state.fs = False
+        st.rerun()
 
+st.markdown("</div>", unsafe_allow_html=True)
+
+# CONTEÚDO
+if st.session_state.fs:
     st.markdown("<div class='fullscreen-container'>", unsafe_allow_html=True)
     st.markdown(content, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
-
-    with button_area:
-        st.markdown("""
-        <div class='button-wrapper'>
-            <button class='full-btn' id='exit-btn'>Sair</button>
-        </div>
-
-        <script>
-            document.getElementById("exit-btn").onclick = function() {
-                fetch("/_toggle_fs?mode=exit")
-                .then(() => window.parent.location.reload());
-            }
-        </script>
-        """, unsafe_allow_html=True)
-
-# ----------------------------------------------------------
-# ENDPOINT STREAMLIT – BACKEND DO FULLSCREEN
-# ----------------------------------------------------------
-from streamlit.web.server import Server
-
-def toggle_fs_handler(request):
-    mode = request.query_params.get("mode", "")
-
-    if mode == "enter":
-        st.session_state.fs = True
-    if mode == "exit":
-        st.session_state.fs = False
-
-    return {"status": "ok"}
-
-srv = Server.get_current()
-if "_toggle_fs" not in srv._endpoint_registry:
-    srv.add_endpoint("/_toggle_fs", toggle_fs_handler)
+else:
+    st.markdown(content, unsafe_allow_html=True)
