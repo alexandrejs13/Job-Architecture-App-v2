@@ -1,5 +1,5 @@
 # pages/4_Job_Maps.py
-# Ajustes finos: coluna GG menor (120px), card menor (110px), Career Path azul SIG
+# Layout Final – cards 100px, coluna GG 100px, tudo alinhado, fullscreen SIG BLUE
 
 import streamlit as st
 import pandas as pd
@@ -28,7 +28,7 @@ def header(icon_path: str, title: str):
 header("assets/icons/globe_trade.png", "Job Maps")
 
 # ==========================================================
-# CSS AJUSTADO — Fino e elegante
+# CSS FINAL — cards 100px + coluna GG 100px
 # ==========================================================
 css = """
 <style>
@@ -57,7 +57,9 @@ css = """
     font-size: 0.88rem;
 }
 
-/* FAMÍLIA */
+/* ================================ */
+/* FAMÍLIA (55px) */
+/* ================================ */
 .header-family {
     background: var(--family-bg);
     color: white;
@@ -74,7 +76,9 @@ css = """
     text-align:center;
 }
 
-/* SUBFAMÍLIA */
+/* ===================================== */
+/* SUBFAMÍLIA (44–65px dinâmico) */
+/* ===================================== */
 .header-subfamily {
     background: var(--subfamily-bg);
     color: #222;
@@ -86,7 +90,7 @@ css = """
     justify-content: center;
     position: sticky;
     top: 55px;
-    left: 120px !important;
+    left: 100px !important;
     z-index: 9;
     border-right: 1px solid var(--border);
     text-align: center;
@@ -94,12 +98,16 @@ css = """
     white-space: normal;
 }
 
-/* GG COLUNA – AGORA 120px */
+/* ==================== */
+/* COLUNA GG — 100px */
+/* ==================== */
 .gg-header {
     background: var(--gg-bg);
     color: white;
     font-weight: 800;
-    width: 120px !important;
+    width: 100px !important;   /* ← AJUSTE AQUI */
+    min-width: 100px !important;
+    max-width: 100px !important;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -113,7 +121,9 @@ css = """
 .gg-cell {
     background: var(--gg-bg);
     color: white;
-    width: 120px !important;
+    width: 100px !important;   /* ← AJUSTE AQUI */
+    min-width: 100px !important;
+    max-width: 100px !important;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -123,7 +133,9 @@ css = """
     border-bottom: 1px solid white;
 }
 
-/* CELLS */
+/* ============================== */
+/* CÉLULAS — alinhamento perfeito */
+/* ============================== */
 .cell {
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -134,34 +146,33 @@ css = """
     align-items: center;
 }
 
-/* CARD – ALTURA 110px */
+/* ========================================= */
+/* CARD FINAL — ALTURA 100px (reduzido) */
+/* ========================================= */
 .job-card {
     background: white;
     border: 1px solid var(--border);
     border-left-width: 4px !important;
     border-radius: 6px;
-    padding: 12px;
+    padding: 10px;
     width: 180px;
-    min-height: 110px;
+    min-height: 100px;      /* ← AJUSTE DA ALTURA */
     display: flex;
     flex-direction: column;
-    justify-content: center;  /* CENTRALIZA VERTICALMENTE */
+    justify-content: center;
+    gap: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
-/* TÍTULO DO CARD */
 .job-card b {
     font-size: 0.80rem;
-    margin-bottom: 6px;
-    line-height: 1.2;
+    color: #222;
 }
 
-/* CAREER PATH + GG EM AZUL SIG */
 .job-card span {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--sig-blue);       /* AQUI FICA AZUL SIG */
-    line-height: 1.1;             /* ESPAÇAMENTO FINO */
+    font-size: 0.74rem;
+    color: var(--sig-blue);
+    line-height: 1.1;
 }
 
 /* FULLSCREEN – SIG BLUE */
@@ -188,8 +199,9 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 
+
 # ==========================================================
-# CARREGA DADOS
+# CARREGAMENTO DOS DADOS
 # ==========================================================
 data = load_excel_data()
 df = data.get("job_profile", pd.DataFrame())
@@ -229,11 +241,11 @@ if path_filter != "Todas":
 
 # ==========================================================
 # GERA MAPA FINAL
-# (não alterado – só renderiza os cards com o novo CSS)
 # ==========================================================
 @st.cache_data(ttl=600)
 def generate_map(df):
 
+    # ordenar famílias pelo maior GG
     fam_max = (
         df.groupby("Job Family")["Global Grade"]
         .apply(lambda x: max(int(g) for g in x if str(g).isdigit()))
@@ -241,6 +253,7 @@ def generate_map(df):
     )
     families_order = fam_max.index.tolist()
 
+    # ordenar subfamílias pelo maior GG
     submap_ordered = {}
     for fam in families_order:
         tmp = (
@@ -253,6 +266,7 @@ def generate_map(df):
 
     grades = sorted(df["Global Grade"].unique(), key=lambda x: int(x), reverse=True)
 
+    # colunas
     submap = {}
     col_index = 2
     for fam in families_order:
@@ -266,8 +280,10 @@ def generate_map(df):
     html = []
     html.append("<div class='map-wrapper'><div class='jobmap-grid'>")
 
+    # GG header
     html.append("<div class='gg-header' style='grid-column:1; grid-row:1 / span 2;'>GG</div>")
 
+    # famílias
     col = 2
     for fam in families_order:
         subs = submap_ordered[fam]
@@ -275,9 +291,11 @@ def generate_map(df):
         html.append(f"<div class='header-family' style='grid-column:{col} / span {span};'>{fam}</div>")
         col += span
 
+    # subfamílias
     for (fam, sub), c in submap.items():
         html.append(f"<div class='header-subfamily' style='grid-column:{c};'>{sub}</div>")
 
+    # células por GG
     row = 3
     for g in grades:
         html.append(f"<div class='gg-cell' style='grid-row:{row};'>GG {g}</div>")
@@ -285,6 +303,7 @@ def generate_map(df):
         for (fam, sub), c_idx in submap.items():
             recs = cards.get((fam, sub, g), [])
             cell = ""
+
             for r in recs:
                 color = get_path_color(r["Career Path"])
                 cell += (
@@ -293,6 +312,7 @@ def generate_map(df):
                     f"<span>{r['Career Path']} – GG {g}</span>"
                     "</div>"
                 )
+
             html.append(f"<div class='cell' style='grid-column:{c_idx}; grid-row:{row};'>{cell}</div>")
 
         row += 1
@@ -303,7 +323,7 @@ def generate_map(df):
 st.markdown(generate_map(df_flt), unsafe_allow_html=True)
 
 # ==========================================================
-# FULLSCREEN SIG BLUE
+# FULLSCREEN FINAL — SIG BLUE
 # ==========================================================
 if "fs" not in st.session_state:
     st.session_state.fs = False
@@ -314,6 +334,7 @@ if not st.session_state.fs:
         st.rerun()
 
 if st.session_state.fs:
+
     components.html("""
         <script>
             document.addEventListener('keydown', (e)=>{
