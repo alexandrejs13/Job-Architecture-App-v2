@@ -1,5 +1,5 @@
 # pages/4_Job_Maps.py
-# Layout Final – Ordenação por maior GG, filtros, fullscreen azul SIG, subfamília dinâmica, bordas perfeitas
+# Layout Final Ajustado – Borda branca entre GG Header e GG21
 
 import streamlit as st
 import pandas as pd
@@ -28,7 +28,7 @@ def header(icon_path: str, title: str):
 header("assets/icons/globe_trade.png", "Job Maps")
 
 # ==========================================================
-# CSS — Layout Perfeito
+# CSS — Layout Perfeito + Borda branca GG fix
 # ==========================================================
 css = """
 <style>
@@ -57,9 +57,7 @@ css = """
     font-size: 0.88rem;
 }
 
-/* ================================ */
-/* FAMÍLIA (ALTURA 55px — PERFEITO) */
-/* ================================ */
+/* FAMÍLIA */
 .header-family {
     background: var(--family-bg);
     color: white;
@@ -76,9 +74,7 @@ css = """
     text-align:center;
 }
 
-/* ===================================== */
-/* SUBFAMÍLIA — ALTURA DINÂMICA E SLIM */
-/* ===================================== */
+/* SUBFAMÍLIA */
 .header-subfamily {
     background: var(--subfamily-bg);
     color: #222;
@@ -97,9 +93,7 @@ css = """
     white-space: normal;
 }
 
-/* ==================== */
-/* COLUNA GG — AJUSTADA */
-/* ==================== */
+/* GG HEADER – agora com borda branca inferior */
 .gg-header {
     background: var(--gg-bg);
     color: white;
@@ -112,9 +106,10 @@ css = """
     left: 0;
     top: 0;
     z-index: 30;
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid white !important;
 }
 
+/* GG CELLS */
 .gg-cell {
     background: var(--gg-bg);
     color: white;
@@ -128,9 +123,7 @@ css = """
     border-bottom: 1px solid white;
 }
 
-/* ============================== */
-/* CÉLULAS — CARDS ALINHADOS */
-/* ============================== */
+/* CELLS */
 .cell {
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -200,7 +193,6 @@ if df.empty:
     st.error("Arquivo Job Profile não encontrado.")
     st.stop()
 
-# PREPARE
 df = df.copy()
 df["Job Family"] = df["Job Family"].astype(str).str.strip()
 df["Sub Job Family"] = df["Sub Job Family"].astype(str).str.strip().replace(['nan','None','<NA>',''], '-')
@@ -218,7 +210,7 @@ def get_path_color(path_name):
     return "#145efc"
 
 # ==========================================================
-# FILTROS (abaixo do header)
+# FILTROS
 # ==========================================================
 colA, colB = st.columns(2)
 fam_filter = colA.selectbox("Job Family", ["Todas"] + sorted(df["Job Family"].unique()))
@@ -231,12 +223,11 @@ if path_filter != "Todas":
     df_flt = df_flt[df_flt["Career Path"] == path_filter]
 
 # ==========================================================
-# GERAÇÃO DO MAPA — Ordenação por maior GG
+# GERAÇÃO DO MAPA (layout perfeito)
 # ==========================================================
 @st.cache_data(ttl=600)
 def generate_map(df):
 
-    # --- ORDENAR FAMÍLIAS POR MAIOR GG ---
     fam_max = (
         df.groupby("Job Family")["Global Grade"]
         .apply(lambda x: max(int(g) for g in x if str(g).isdigit()))
@@ -244,7 +235,6 @@ def generate_map(df):
     )
     families_order = fam_max.index.tolist()
 
-    # --- ORDENAR SUBFAMÍLIAS POR MAIOR GG ---
     submap_ordered = {}
     for fam in families_order:
         tmp = (
@@ -257,7 +247,6 @@ def generate_map(df):
 
     grades = sorted(df["Global Grade"].unique(), key=lambda x: int(x), reverse=True)
 
-    # Build column map
     submap = {}
     col_index = 2
     for fam in families_order:
@@ -286,10 +275,17 @@ def generate_map(df):
     for (fam, sub), c in submap.items():
         html.append(f"<div class='header-subfamily' style='grid-column:{c};'>{sub}</div>")
 
-    # Cells
+    # GG CELLS + BORDER TOP ON FIRST ROW
     row = 3
+    first_row = True
+
     for g in grades:
-        html.append(f"<div class='gg-cell' style='grid-row:{row};'>GG {g}</div>")
+
+        if first_row:
+            html.append(f"<div class='gg-cell' style='grid-row:{row}; border-top:1px solid white !important;'>GG {g}</div>")
+            first_row = False
+        else:
+            html.append(f"<div class='gg-cell' style='grid-row:{row};'>GG {g}</div>")
 
         for (fam, sub), c_idx in submap.items():
             recs = cards.get((fam, sub, g), [])
@@ -311,22 +307,20 @@ def generate_map(df):
     html.append("</div></div>")
     return "".join(html)
 
-# RENDER MAP
+# RENDER
 st.markdown(generate_map(df_flt), unsafe_allow_html=True)
 
 # ==========================================================
-# FULLSCREEN (azul SIG)
+# FULLSCREEN
 # ==========================================================
 if "fs" not in st.session_state:
     st.session_state.fs = False
 
-# entrar fullscreen
 if not st.session_state.fs:
-    if st.button("⛶ Tela Cheia", key="enterfs", help="Tela cheia", type="primary"):
+    if st.button("⛶ Tela Cheia", key="enterfs", type="primary"):
         st.session_state.fs = True
         st.rerun()
 
-# modo fullscreen
 if st.session_state.fs:
 
     components.html("""
