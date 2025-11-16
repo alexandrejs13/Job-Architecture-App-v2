@@ -1,3 +1,1 @@
-# Job Architecture App
-
-App multilíngue da SIG.
+# SIG Job Architecture App

@@ -1,16 +1,19 @@
+
 import streamlit as st
+from pathlib import Path
 
-def load_css():
-    with open("assets/sig_theme.css") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+st.set_page_config(page_title="Job Architecture", page_icon="📊", layout="wide")
 
-load_css()
+st.markdown('\n<style>\nimg.menu-icon {\n    width:40px !important;\n    margin-right:8px;\n    vertical-align:middle;\n}\n</style>\n', unsafe_allow_html=True)
 
-st.set_page_config(page_title="Job Architecture App", layout="wide")
+icon_path = Path(__file__).resolve().parent / "icons" / "sig_icon.png"
 
-with st.sidebar:
-    st.image("assets/icons/SIG_Logo_RGB_Black.png", width=140)
-    st.markdown("---")
+col1,col2 = st.columns([1,8])
+with col1:
+    st.image(str(icon_path), width=120)
+with col2:
+    st.markdown("<h1 style='font-weight:700;'>Job Architecture</h1>", unsafe_allow_html=True)
 
-st.markdown("# Bem-vindo ao Job Architecture App")
-st.write("Selecione uma página no menu à esquerda.")
+st.write("""A single global database of generic job descriptions that serves as the reference to classify,
+harmonize, and standardize all SIG positions. Here, you find consistent job titles, clear levels,
+and globally aligned profiles — all structured so that managers only need to select the correct local position.""")
