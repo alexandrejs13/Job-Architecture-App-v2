@@ -1,5 +1,4 @@
 # pages/3_Job_Profile_Description.py
-
 import streamlit as st
 import pandas as pd
 import html
@@ -12,7 +11,7 @@ st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 
 # ---------------------------------------------------------
-# HEADER (PNG HD + clean)
+# HEADER (PNG HD)
 # ---------------------------------------------------------
 def header_png(icon_path, title_text):
     st.markdown(
@@ -47,11 +46,11 @@ def header_png(icon_path, title_text):
         unsafe_allow_html=True,
     )
 
-
 header_png("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
+
 # ---------------------------------------------------------
-# CSS GERAL (minimalista + sem borda colorida)
+# CSS – GRID POR SEÇÃO
 # ---------------------------------------------------------
 st.markdown(
     """
@@ -62,20 +61,12 @@ html, body, [data-testid="stAppViewContainer"] {
     background: white !important;
 }
 
-/* sidebar fixa */
-[data-testid="stSidebar"] {
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
-}
-
-/* container principal */
 .block-container {
     max-width: 1600px !important;
-    padding-top: 1rem;
+    padding-top: 0.5rem;
 }
 
-/* GRID responsivo — 1, 2 ou 3 colunas */
+/* GRID Dinâmico — 1, 2 ou 3 colunas */
 .jp-grid {
     display: grid;
     gap: 26px;
@@ -87,20 +78,20 @@ html, body, [data-testid="stAppViewContainer"] {
     .jp-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* CARD clean */
+/* Card Limpo */
 .jp-card {
     background: #ffffff;
-    border: 1px solid #e8e8e8;
+    border: 1px solid #ececec;
     border-radius: 14px;
     padding: 22px 26px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* título do card */
+/* Título */
 .jp-title {
     font-weight: 700;
     font-size: 1.25rem;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 .jp-gg {
     color: #145efc;
@@ -108,19 +99,20 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-bottom: 14px;
 }
 
-/* bloco meta */
+/* Bloco Meta */
 .jp-meta {
     background: #f5f4f1;
     border-radius: 10px;
     padding: 12px 14px;
-    margin-bottom: 18px;
+    margin-bottom: 22px;
     font-size: 0.94rem;
 }
 
-/* seção */
+/* Seção */
 .jp-section {
-    margin-bottom: 28px;
+    margin-bottom: 38px;
 }
+
 .jp-section-title {
     display: flex;
     align-items: center;
@@ -129,7 +121,8 @@ html, body, [data-testid="stAppViewContainer"] {
     font-size: 1rem;
     margin-bottom: 8px;
 }
-.jp-section-title svg {
+
+.jp-section svg {
     width: 22px;
     height: 22px;
 }
@@ -145,8 +138,9 @@ html, body, [data-testid="stAppViewContainer"] {
     unsafe_allow_html=True,
 )
 
+
 # ---------------------------------------------------------
-# CARREGAR EXCEL
+# LOAD EXCEL
 # ---------------------------------------------------------
 @st.cache_data(ttl=600)
 def load_job_profile():
@@ -158,29 +152,28 @@ def load_job_profile():
     return df
 
 df = load_job_profile()
-
 if df.empty:
-    st.error("Não foi possível carregar Job Profile.xlsx")
+    st.error("Arquivo Job Profile.xlsx não encontrado.")
     st.stop()
 
 
 # ---------------------------------------------------------
-# FILTROS
+# FILTERS
 # ---------------------------------------------------------
 st.subheader("🔍 Explorador de Perfis")
 
 familias = sorted(df["Job Family"].dropna().unique())
 
-col1, col2, col3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-with col1:
+with c1:
     familia = st.selectbox("Job Family", ["Selecione..."] + familias)
 
-with col2:
+with c2:
     subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].dropna().unique()) if familia!="Selecione..." else []
     sub = st.selectbox("Sub Job Family", ["Selecione..."] + subs)
 
-with col3:
+with c3:
     paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()) if sub!="Selecione..." else []
     trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
 
@@ -191,6 +184,7 @@ if sub != "Selecione...":
     filtered = filtered[filtered["Sub Job Family"] == sub]
 if trilha != "Selecione...":
     filtered = filtered[filtered["Career Path"] == trilha]
+
 
 # ---------------------------------------------------------
 # PICKLIST
@@ -211,13 +205,12 @@ if not selecionados_labels:
     st.stop()
 
 selecionados = [label_to_profile[l] for l in selecionados_labels]
-
 rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
 
-# ---------------------------------------------------------
-# SVG INLINE (carrega tudo em string)
-# ---------------------------------------------------------
 
+# ---------------------------------------------------------
+# LOAD SVG INLINE
+# ---------------------------------------------------------
 def svg(name):
     with open(f"assets/icons/sig/{name}", "r") as f:
         return f.read()
@@ -237,10 +230,11 @@ icons = {
 
 sections = list(icons.keys())
 
+
 # ---------------------------------------------------------
-# RENDERIZAÇÃO DOS CARDS
+# RENDER FINAL – GRID POR SEÇÃO
 # ---------------------------------------------------------
-st.markdown("### ✨ Comparativo de Perfis Selecionados")
+st.markdown("### ✨ Comparativo de Perfis Selecionados<br><br>", unsafe_allow_html=True)
 
 st.markdown('<div class="jp-grid">', unsafe_allow_html=True)
 
@@ -253,6 +247,7 @@ for card in rows:
     cp = html.escape(str(card.get("Career Path", "")))
     fc = html.escape(str(card.get("Full Job Code", "")))
 
+    # CARD HEADER
     card_html = f"""
     <div class="jp-card">
 
@@ -267,10 +262,11 @@ for card in rows:
         </div>
     """
 
+    # SECTIONS — synchronized, even if empty
     for sec in sections:
         content = str(card.get(sec, "")).strip()
         if not content or content.lower() == "nan":
-            continue
+            content = "—"
 
         card_html += f"""
         <div class="jp-section">
@@ -280,7 +276,6 @@ for card in rows:
         """
 
     card_html += "</div>"
-
     st.markdown(card_html, unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
