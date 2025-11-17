@@ -1,5 +1,5 @@
 # pages/3_Job_Profile_Description.py
-# Job Profile Description – Versão Final (SIG Design System)
+# Job Profile Description – Comparação de até 3 perfis (SIG Design System)
 
 import streamlit as st
 import pandas as pd
@@ -7,36 +7,49 @@ import html
 from pathlib import Path
 
 # ==========================================================
-# CONFIG
+# CONFIG DA PÁGINA
 # ==========================================================
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ==========================================================
-# HEADER PADRÃO
+# HEADER PADRÃO SIG (PNG com antialiasing)
 # ==========================================================
 def header(icon_path, title):
-    col1, col2 = st.columns([0.08, 0.92])
-    with col1:
-        st.image(icon_path, width=48)
-    with col2:
-        st.markdown(
-            f"""
-            <h1 style="margin:0; padding:0; 
-                font-size:36px; 
-                font-weight:700;">
-                {title}
-            </h1>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown("<hr style='margin-top:5px;'>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <style>
+        .page-header {{
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }}
+        .page-header img {{
+            width: 42px;
+            height: 42px;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }}
+        .page-header-title {{
+            font-size: 36px;
+            font-weight: 700;
+            font-family: 'PPSIGFlow', sans-serif;
+            margin: 0;
+            padding: 0;
+        }}
+    </style>
+
+    <div class="page-header">
+        <img src="{icon_path}">
+        <h1 class="page-header-title">{title}</h1>
+    </div>
+    <hr style="margin-top:6px; margin-bottom:20px;">
+    """, unsafe_allow_html=True)
 
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# CSS GLOBAL (SIG)
+# CSS GLOBAL – FONTE + LAYOUT EXECUTIVO + SCROLL SYNC
 # ==========================================================
-custom_css = """
+st.markdown("""
 <style>
 
 @font-face {
@@ -56,73 +69,85 @@ custom_css = """
 }
 
 html, body, [data-testid="stAppViewContainer"] {
-    font-family: 'PPSIGFlow', sans-serif !important;
+    font-family: "PPSIGFlow", sans-serif !important;
     background: #ffffff !important;
     color: #222 !important;
 }
 
-/* Limite do conteúdo */
-.block-container {
-    max-width: 1600px !important;
+/* Sidebar travada */
+[data-testid="stSidebar"] {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    overflow: hidden !important;
 }
 
-/* GRID DOS CARDS */
-.jp-comparison-grid {
+/* GRID principal */
+.jp-grid {
     display: grid;
-    gap: 24px;
+    gap: 26px;
 }
 
-/* CARD */
+/* CARD EXECUTIVO */
 .jp-card {
     background: #ffffff;
-    border: 1px solid #e6e6e6;
+    border: 1px solid #e5e5e5;
     border-radius: 14px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    height: 650px;
     display: flex;
     flex-direction: column;
-    height: 650px;
-    overflow-y: auto;
+    overflow: hidden;
     position: relative;
 }
 
-/* HEADER FIXO DO CARD */
-.jp-card-header {
+/* HEADER FIXO 160px */
+.jp-header {
+    padding: 20px 22px 14px 22px;
+    background: white;
     position: sticky;
     top: 0;
-    background: #ffffff;
-    padding: 18px 22px 14px 22px;
+    z-index: 10;
+    height: 160px;
     border-bottom: 1px solid #eee;
-    z-index: 50;
 }
 
-/* TÍTULOS */
 .jp-title {
     font-size: 1.25rem;
     font-weight: 700;
+    margin-bottom: 4px;
 }
 .jp-gg {
-    color: #145efc;
     font-weight: 700;
+    color: #145efc;
     margin-bottom: 12px;
 }
 
-/* META BLOCK */
-.jp-meta-block {
+.jp-meta {
     background: #f5f4f1;
     border-radius: 10px;
     padding: 10px 12px;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+}
+
+/* BODY ROLÁVEL – scroll sincronizado */
+.jp-body {
+    padding: 14px 22px;
+    overflow-y: auto;
+    height: calc(650px - 160px);
 }
 
 /* SEÇÕES */
 .jp-section {
-    padding: 14px 22px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
     border-bottom: 1px solid #f0f0f0;
 }
 .jp-section.alt {
     background: #fafafa;
+    padding: 12px;
+    border-radius: 8px;
 }
-
 .jp-section-title {
     font-weight: 700;
     font-size: 0.92rem;
@@ -131,50 +156,61 @@ html, body, [data-testid="stAppViewContainer"] {
     align-items: center;
     gap: 8px;
 }
-.jp-section-title img {
-    width: 22px;
-}
-
 .jp-text {
-    line-height: 1.45;
-    font-size: 0.9rem;
     white-space: pre-wrap;
+    font-size: 0.9rem;
+    line-height: 1.45;
 }
 
-/* FOOTER */
+/* PDF FOOTER */
 .jp-footer {
-    padding: 15px;
+    padding: 12px 15px;
     text-align: right;
 }
 .jp-footer img {
     width: 26px;
-    opacity: 0.8;
     cursor: pointer;
+    opacity: 0.75;
 }
 .jp-footer img:hover {
     opacity: 1;
+    transform: scale(1.1);
 }
 
+/************ SCROLL SYNC ************/
 </style>
-"""
-st.markdown(custom_css, unsafe_allow_html=True)
+
+<script>
+window.addEventListener("load", function() {
+    const bodies = document.querySelectorAll(".jp-body");
+    bodies.forEach(b => {
+        b.addEventListener("scroll", () => {
+            const pos = b.scrollTop;
+            bodies.forEach(other => {
+                if (b !== other) other.scrollTop = pos;
+            });
+        });
+    });
+});
+</script>
+
+""", unsafe_allow_html=True)
 
 # ==========================================================
-# CARREGAR ARQUIVO
+# CARREGAMENTO DOS DADOS
 # ==========================================================
 @st.cache_data
 def load_job_profile():
-    path = Path("data") / "Job Profile.xlsx"
-    if not path.exists():
+    file = Path("data") / "Job Profile.xlsx"
+    if not file.exists():
         return pd.DataFrame()
-    df = pd.read_excel(path)
+    df = pd.read_excel(file)
     df.columns = df.columns.str.strip()
     return df
 
 df = load_job_profile()
-
 if df.empty:
-    st.error("Erro ao carregar Job Profile.xlsx")
+    st.error("Arquivo Job Profile.xlsx não encontrado.")
     st.stop()
 
 # ==========================================================
@@ -198,19 +234,20 @@ with col3:
     trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
 
 filtered = df.copy()
-if familia != "Selecione...":
+if familia!="Selecione...":
     filtered = filtered[filtered["Job Family"] == familia]
-if sub != "Selecione...":
+if sub!="Selecione...":
     filtered = filtered[filtered["Sub Job Family"] == sub]
-if trilha != "Selecione...":
+if trilha!="Selecione...":
     filtered = filtered[filtered["Career Path"] == trilha]
 
+# ==========================================================
 # PICKLIST
+# ==========================================================
 filtered["label"] = filtered.apply(
     lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
     axis=1
 )
-
 label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selecionados_labels = st.multiselect(
@@ -220,41 +257,32 @@ selecionados_labels = st.multiselect(
 )
 
 if not selecionados_labels:
-    st.info("Selecione ao menos 1 perfil.")
     st.stop()
 
-selecionados = [label_to_profile[l] for l in selecionados_labels]
-
-rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
-
-num = len(rows)
-grid_template = f"grid-template-columns: repeat({num}, 1fr);"
-
-st.markdown("---")
-st.markdown("### ✨ Comparativo de Perfis Selecionados")
+perfils = [label_to_profile[l] for l in selecionados_labels]
+rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in perfils]
 
 # ==========================================================
-# MAPA FINAL DE ÍCONES SIG
+# SEÇÕES (com emojis minimalistas)
 # ==========================================================
-icons = {
-    "Sub Job Family Description": "Hierarchy.svg",
-    "Job Profile Description": "File_Clipboard_Text.svg",
-    "Career Band Description": "Hierarchy.svg",
-    "Role Description": "Shopping_Business_Target.svg",
-    "Grade Differentiator": "Edit_Pencil.svg",
-    "Qualifications": "Content_Book_Phone.svg",
-    "Specific parameters / KPIs": "Graph_Bar.svg",
-    "Competencies 1": "Setting_Cog.svg",
-    "Competencies 2": "Setting_Cog.svg",
-    "Competencies 3": "Setting_Cog.svg",
-}
-
-sections_order = list(icons.keys())
+sections = [
+    ("🧭 Sub Job Family Description", "Sub Job Family Description"),
+    ("🧠 Job Profile Description", "Job Profile Description"),
+    ("🏛️ Career Band Description", "Career Band Description"),
+    ("🎯 Role Description", "Role Description"),
+    ("🏅 Grade Differentiator", "Grade Differentiator"),
+    ("🎓 Qualifications", "Qualifications"),
+    ("📌 Specific parameters / KPIs", "Specific parameters / KPIs"),
+    ("⚙️ Competencies 1", "Competencies 1"),
+    ("⚙️ Competencies 2", "Competencies 2"),
+    ("⚙️ Competencies 3", "Competencies 3"),
+]
 
 # ==========================================================
 # RENDERIZAÇÃO DOS CARDS
 # ==========================================================
-html_parts = [f'<div class="jp-comparison-grid" style="{grid_template}">']
+grid = f"grid-template-columns: repeat({len(rows)}, 1fr);"
+st.markdown(f'<div class="jp-grid" style="{grid}">', unsafe_allow_html=True)
 
 for card in rows:
     job = html.escape(str(card.get("Job Profile","")))
@@ -264,46 +292,50 @@ for card in rows:
     cp = html.escape(str(card.get("Career Path","")))
     fc = html.escape(str(card.get("Full Job Code","")))
 
-    card_html = []
-    card_html.append('<div class="jp-card">')
+    # CARD
+    st.markdown('<div class="jp-card">', unsafe_allow_html=True)
 
     # HEADER FIXO
-    card_html.append('<div class="jp-card-header">')
-    card_html.append(f'<div class="jp-title">{job}</div>')
-    card_html.append(f'<div class="jp-gg">GG {gg}</div>')
-    card_html.append('<div class="jp-meta-block">')
-    card_html.append(f"<div><b>Job Family:</b> {jf}</div>")
-    card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
-    card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
-    card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    card_html.append('</div>')
-    card_html.append('</div>') 
+    st.markdown(f"""
+    <div class="jp-header">
+        <div class="jp-title">{job}</div>
+        <div class="jp-gg">GG {gg}</div>
 
-    # SEÇÕES DINÂMICAS COM ÍCONES SIG
-    for i, sec in enumerate(sections_order):
-        content = str(card.get(sec,"")).strip()
+        <div class="jp-meta">
+            <div><b>Job Family:</b> {jf}</div>
+            <div><b>Sub Job Family:</b> {sf}</div>
+            <div><b>Career Path:</b> {cp}</div>
+            <div><b>Full Job Code:</b> {fc}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # BODY ROLÁVEL
+    st.markdown('<div class="jp-body">', unsafe_allow_html=True)
+
+    for i, (title, colname) in enumerate(sections):
+        content = str(card.get(colname,"")).strip()
         if not content or content.lower()=="nan":
             continue
 
-        icon_file = icons[sec]
-        alt = " alt" if i%2==1 else ""
+        alt = " alt" if i % 2 else ""
 
-        card_html.append(f'<div class="jp-section{alt}">')
-        card_html.append(
-            f'<div class="jp-section-title">'
-            f'<img src="assets/icons/sig/{icon_file}"> {sec}'
-            f'</div>'
-        )
-        card_html.append(f'<div class="jp-text">{html.escape(content)}</div>')
-        card_html.append('</div>')
+        st.markdown(f"""
+        <div class="jp-section{alt}">
+            <div class="jp-section-title">{title}</div>
+            <div class="jp-text">{html.escape(content)}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # FOOTER
-    card_html.append('<div class="jp-footer">')
-    card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">')
-    card_html.append('</div>')
+    st.markdown("</div>", unsafe_allow_html=True)  # fecha body
 
-    card_html.append('</div>')
-    html_parts.append("".join(card_html))
+    # FOOTER PDF
+    st.markdown("""
+    <div class="jp-footer">
+        <img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">
+    </div>
+    """, unsafe_allow_html=True)
 
-html_parts.append('</div>')
-st.markdown("".join(html_parts), unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)  # fecha card
+
+st.markdown("</div>", unsafe_allow_html=True)  # fecha grid
