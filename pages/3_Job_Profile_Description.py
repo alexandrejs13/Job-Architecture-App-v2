@@ -79,7 +79,7 @@ html, body, [data-testid="stAppViewContainer"] {
     gap: 24px;
 }
 
-/* CARD */
+/* CARD — agora SEM scroll e SEM height */
 .jp-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;
@@ -88,9 +88,8 @@ html, body, [data-testid="stAppViewContainer"] {
     padding: 0;
     display: flex;
     flex-direction: column;
-    height: 650px;
-    overflow-y: auto;
     position: relative;
+    overflow: visible !important;   /* garante que nenhum componente crie scroll */
 }
 
 /* HEADER FIXO NO CARD */
