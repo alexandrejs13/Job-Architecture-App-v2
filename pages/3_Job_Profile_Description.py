@@ -64,7 +64,7 @@ html, body, [data-testid="stAppViewContainer"] {
     padding-top: 1rem !important;
 }
 
-/* GRID */
+/* GRID PRINCIPAL */
 .jp-comparison-grid {
     display: grid;
     gap: 24px;
@@ -78,18 +78,32 @@ html, body, [data-testid="stAppViewContainer"] {
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 0;
     position: relative;
-    overflow: visible !important; 
+    overflow: visible !important;
 }
 
-/* 🔥 CABEÇALHO FIXO (agora fixo NA PÁGINA) */
+/* 🔥 CABEÇALHO FIXO (AGORA PERFEITO SEM VAZAMENTO DE TEXTO) */
 .jp-card-header {
     position: sticky;
-    top: 80px;                       /* ajuste fino p/ não bater no topo */
+    top: 80px;
     background: #ffffff;
     padding: 18px 22px 14px 22px;
-    z-index: 50;
+    z-index: 200;
     border-bottom: 1px solid #eee;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+
+    /* sombra forte só no topo, que funciona como "tampa" */
+    box-shadow: 0 10px 14px rgba(255,255,255,1), 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Máscara branca atrás do header (EVITA vazamento do conteúdo anterior) */
+.jp-card-header::after {
+    content: "";
+    position: absolute;
+    top: -160px;     
+    left: 0;
+    width: 100%;
+    height: 200px;   
+    background: #ffffff;
+    z-index: -1;
 }
 
 .jp-title {
@@ -97,6 +111,7 @@ html, body, [data-testid="stAppViewContainer"] {
     font-weight: 700;
     margin-bottom: 4px;
 }
+
 .jp-gg {
     color: #145efc;
     font-weight: 700;
@@ -141,7 +156,7 @@ html, body, [data-testid="stAppViewContainer"] {
     white-space: pre-wrap;
 }
 
-/* FOOTER PDF */
+/* FOOTER */
 .jp-footer {
     padding: 15px;
     text-align: right;
