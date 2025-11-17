@@ -32,7 +32,7 @@ def header(icon_path, title):
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# CSS GLOBAL
+# CSS GLOBAL — CORRIGIDO
 # ==========================================================
 custom_css = """
 <style>
@@ -70,45 +70,35 @@ html, body, [data-testid="stAppViewContainer"] {
     gap: 24px;
 }
 
-/* CARD */
+/* ==========================================================
+   CARD – bordas corrigidas e preservadas
+   ========================================================== */
 .jp-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 0;
+    overflow: hidden !important;  /* 🔥 GARANTE QUE NADA ULTRAPASSE A BORDA */
     position: relative;
-    overflow: visible !important;
+    z-index: 1;
 }
 
 /* ==========================================================
-   🔥 CABEÇALHO FIXO (agora com “teto invisível” para evitar
-   que o texto suba e invada o cabeçalho)
+   HEADER FIXO — corrigido sem ::before
    ========================================================== */
 .jp-card-header {
     position: sticky;
     top: 90px;
     background: #ffffff;
     padding: 18px 22px 14px 22px;
-    z-index: 50;
-    border-bottom: 1px solid #eee;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    z-index: 10;
+
+    /* sombra suave inferior */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-/* 🔥 TRUQUE DO TETO: cria área branca acima do cabeçalho,
-   garantindo que nenhum texto apareça por trás dele. */
-.jp-card-header::before {
-    content: "";
-    position: absolute;
-    top: -60px;     /* tamanho do teto */
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: #ffffff;
-    z-index: -1;
-}
-
-/* Títulos */
+/* TITULOS */
 .jp-title {
     font-size: 1.25rem;
     font-weight: 700;
@@ -121,7 +111,7 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-bottom: 12px;
 }
 
-/* META BLOCK */
+/* META */
 .jp-meta-block {
     background: #f5f4f1;
     border-radius: 10px;
@@ -173,6 +163,16 @@ html, body, [data-testid="stAppViewContainer"] {
 
 .jp-footer img:hover {
     opacity: 1;
+}
+
+/* ==========================================================
+   TÍTULO DO COMPARATIVO — sempre acima dos cards
+   ========================================================== */
+.comparison-title {
+    position: relative;
+    z-index: 200;
+    background: #ffffff;
+    padding-top: 6px;
 }
 
 </style>
@@ -251,8 +251,9 @@ num = len(rows)
 grid_template = f"grid-template-columns: repeat({num}, 1fr);"
 
 st.markdown("---")
-st.markdown("### ✨ Comparativo de Perfis Selecionados")
+st.markdown('<h3 class="comparison-title">✨ Comparativo de Perfis Selecionados</h3>', unsafe_allow_html=True)
 
+# Ícones
 icons = {
     "Sub Job Family Description": "Hierarchy.svg",
     "Job Profile Description": "File_Clipboard_Text.svg",
@@ -295,7 +296,7 @@ for card in rows:
     card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
     card_html.append("</div>")
-    card_html.append("</div>")
+    card_html.append("</div>")  # header close
 
     # SEÇÕES
     for i, sec in enumerate(sections_order):
@@ -313,15 +314,15 @@ for card in rows:
         card_html.append(f'<div class="jp-text">{html.escape(content)}</div>')
         card_html.append("</div>")
 
-    # FOOTER PDF
+    # FOOTER
     card_html.append('<div class="jp-footer">')
     card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">')
     card_html.append("</div>")
 
-    card_html.append("</div>")
+    card_html.append("</div>")  # card wrapper
 
     html_parts.append("".join(card_html))
 
-html_parts.append("</div>")
+html_parts.append("</div>")  # grid
 
 st.markdown("".join(html_parts), unsafe_allow_html=True)
