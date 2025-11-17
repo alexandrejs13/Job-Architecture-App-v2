@@ -78,13 +78,13 @@ html, body, [data-testid="stAppViewContainer"] {
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 0;
     position: relative;
-    overflow: visible !important; 
+    overflow: hidden !important;      /* 🔥 AQUI É O AJUSTE PRINCIPAL */
 }
 
-/* 🔥 CABEÇALHO FIXO (agora fixo NA PÁGINA) */
+/* CABEÇALHO FIXO */
 .jp-card-header {
     position: sticky;
-    top: 80px;                       /* ajuste fino p/ não bater no topo */
+    top: 80px;
     background: #ffffff;
     padding: 18px 22px 14px 22px;
     z-index: 50;
