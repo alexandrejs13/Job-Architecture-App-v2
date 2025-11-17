@@ -6,6 +6,9 @@ import pandas as pd
 import html
 from pathlib import Path
 
+# ==========================================================
+# PAGE CONFIG
+# ==========================================================
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ==========================================================
@@ -23,7 +26,7 @@ def header():
 header()
 
 # ==========================================================
-# GLOBAL CSS — NEW SCROLL LAYOUT (NO INTERNAL SCROLL)
+# GLOBAL CSS — FINAL WORKDAY / WTW STYLE
 # ==========================================================
 st.markdown("""
 <style>
@@ -40,21 +43,21 @@ st.markdown("""
     border: 1px solid #e6e6e6;
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-    overflow: hidden;                    /* prevents content above header */
+    overflow: hidden;                    /* prevents content from leaking above */
     position: relative;
 }
 
-/* INTERNAL STICKY HEADER */
+/* INTERNAL FIXED HEADER */
 .jp-header {
     position: sticky;
-    top: 0;                              /* 🔥 FIXO NO TOPO DO CARD (não da página) */
+    top: 0;                              /* 🔥 fixo dentro do card, NÃO na página */
     background: #ffffff;
     padding: 18px 22px 14px 22px;
     z-index: 10;
     border-bottom: 1px solid #eee;
 }
 
-/* TITLE */
+/* TITLE & GG */
 .jp-title {
     font-size: 1.25rem;
     font-weight: 700;
@@ -67,39 +70,45 @@ st.markdown("""
     margin-bottom: 12px;
 }
 
-/* META BLOCK */
+/* META */
 .jp-meta {
     background: #f5f4f1;
     padding: 10px 12px;
     border-radius: 10px;
     font-size: 0.9rem;
+    line-height: 1.35;
 }
 
-/* CONTENT BELOW - GLOBAL PAGE SCROLL */
+/* BODY (scroll global, not inside card) */
 .jp-body {
     padding: 18px 22px;
 }
 
+/* SECTIONS */
 .jp-section {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 22px;
     padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .jp-section-title {
     font-weight: 700;
-    margin-bottom: 6px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
+    font-size: 0.92rem;
+    margin-bottom: 8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
 }
 
-.jp-section-title img { width: 20px; opacity: 0.8; }
+.jp-section-title img {
+    width:20px;
+    opacity:0.8;
+}
 
 .jp-text {
-    font-size: 0.9rem;
-    line-height: 1.45;
-    white-space: pre-wrap;
+    font-size:0.9rem;
+    line-height:1.45;
+    white-space:pre-wrap;
 }
 
 </style>
@@ -151,7 +160,9 @@ if flt.empty:
     st.info("No job profiles match the selected criteria.")
     st.stop()
 
+# ==========================================================
 # PICKLIST
+# ==========================================================
 flt["label"] = flt.apply(
     lambda r: f"GG {int(r['Global Grade'])} • {r['Job Profile']}",
     axis=1
@@ -159,7 +170,11 @@ flt["label"] = flt.apply(
 
 label_map = dict(zip(flt["label"], flt["Job Profile"]))
 
-selected = st.multiselect("Select up to 3 job profiles:", list(label_map.keys()), max_selections=3)
+selected = st.multiselect(
+    "Select up to 3 job profiles:",
+    list(label_map.keys()),
+    max_selections=3
+)
 
 if not selected:
     st.info("Please select at least one job profile.")
@@ -189,7 +204,7 @@ sections = list(icons.keys())
 # ==========================================================
 # BUILD CARDS
 # ==========================================================
-html = ['<div class="jp-grid">']
+html_parts = ['<div class="jp-grid">']
 
 for c in cards:
 
@@ -203,7 +218,7 @@ for c in cards:
     card = []
     card.append('<div class="jp-card">')
 
-    # HEADER
+    # HEADER (FIXED INSIDE CARD)
     card.append('<div class="jp-header">')
     card.append(f'<div class="jp-title">{job}</div>')
     card.append(f'<div class="jp-gg">GG {gg}</div>')
@@ -214,12 +229,12 @@ for c in cards:
     card.append(f"<div><b>Full Job Code:</b> {fc}</div>")
     card.append('</div></div>')
 
-    # BODY
+    # BODY (FOLLOWS PAGE SCROLL)
     card.append('<div class="jp-body">')
 
     for sec in sections:
         content = str(c.get(sec, "")).strip()
-        if not content or content.lower() == "nan": 
+        if not content or content.lower() == "nan":
             continue
 
         icon = icons[sec]
@@ -229,11 +244,9 @@ for c in cards:
         card.append(f'<div class="jp-text">{html.escape(content)}</div>')
         card.append('</div>')
 
-    card.append('</div>')  # body
-    card.append('</div>')  # card
+    card.append('</div></div>')  # close body and card
 
-    html.append("".join(card))
+    html_parts.append("".join(card))
 
-html.append('</div>')  # grid
-
-st.markdown("".join(html), unsafe_allow_html=True)
+html_parts.append("</div>")
+st.markdown("".join(html_parts), unsafe_allow_html=True)
