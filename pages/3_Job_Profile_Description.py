@@ -3,37 +3,77 @@ import pandas as pd
 import html
 from pathlib import Path
 
+# ---------------------------------------------------------
+# CONFIG
+# ---------------------------------------------------------
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
-# HEADER -----------------------------------------------------
-
+# ---------------------------------------------------------
+# HEADER (PNG HD perfeito)
+# ---------------------------------------------------------
 def header_png(icon_path, title_text):
     st.markdown(
         f"""
-        <div class="page-title" style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
-            <img src="{icon_path}" style="width:40px; height:40px; image-rendering:crisp-edges;">
-            <h1 style="margin:0; font-size:34px; font-weight:800;">{title_text}</h1>
+        <style>
+            .page-title-jp {{
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 12px;
+                margin-top: 10px;
+            }}
+            .page-title-jp img {{
+                width: 40px;
+                height: 40px;
+                object-fit: contain;
+                object-position: center;
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+                display: block;
+            }}
+            .page-title-jp h1 {{
+                margin: 0;
+                padding: 0;
+                font-size: 34px;
+                font-weight: 800;
+            }}
+        </style>
+
+        <div class="page-title-jp">
+            <img src="{icon_path}">
+            <h1>{title_text}</h1>
         </div>
-        <hr>
+        <hr style="margin-top:6px; margin-bottom:30px;">
         """,
         unsafe_allow_html=True,
     )
 
+
 header_png("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
-# CSS GRID CORRETO ---------------------------------------------
 
-st.markdown("""
+# ---------------------------------------------------------
+# GLOBAL CSS (puxa estilo SIG)
+# ---------------------------------------------------------
+st.markdown(
+    """
 <style>
 
+html, body, [data-testid="stAppViewContainer"] {
+    font-family: 'PPSIGFlow', sans-serif;
+    background: white !important;
+}
+
+/* área principal */
+.block-container {
+    max-width: 1500px !important;
+    padding-top: 0rem;
+}
+
+/* GRID responsivo */
 .jp-grid {
     display: grid;
     gap: 26px;
-    width: 100%;
-}
-
-@media (max-width: 899px) {
-    .jp-grid { grid-template-columns: 1fr; }
 }
 @media (min-width: 900px) and (max-width: 1299px) {
     .jp-grid { grid-template-columns: repeat(2, 1fr); }
@@ -42,45 +82,52 @@ st.markdown("""
     .jp-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* CARD principal */
 .jp-card {
-    background: #faf9f7;
+    background: #ffffff;
+    border: 1px solid #e8e8e8;
     border-radius: 14px;
-    border: 1px solid #e6e2db;
-    padding: 26px;
+    padding: 26px 30px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
 }
 
+/* TÍTULO DO CARD */
 .jp-title {
-    font-size: 1.35rem;
     font-weight: 800;
-    margin-bottom: 4px;
+    font-size: 1.35rem;
+    margin-bottom: 2px;
 }
-
 .jp-gg {
     color: #145efc;
     font-weight: 800;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
+/* META BLOCO */
 .jp-meta {
-    padding: 14px;
-    background: #fff;
-    border: 1px solid #e6e2db;
-    border-radius: 12px;
+    background: #f5f4f1;
+    border-radius: 10px;
+    padding: 16px 18px;
     margin-bottom: 22px;
-    font-size: 0.95rem;
+    font-size: 0.94rem;
 }
 
+/* SEÇÕES */
 .jp-section {
-    margin-bottom: 26px;
+    margin-bottom: 28px;
+    padding: 18px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #eceae6;
 }
 
 .jp-section-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-weight: 800;
-    font-size: 1rem;
-    margin-bottom: 6px;
+    font-size: 1.02rem;
+    margin-bottom: 10px;
 }
 
 .jp-section-title svg {
@@ -89,17 +136,19 @@ st.markdown("""
 }
 
 .jp-text {
-    font-size: 0.92rem;
-    line-height: 1.42;
     white-space: pre-wrap;
+    font-size: 0.94rem;
+    line-height: 1.45;
 }
 
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-
-# DATA ---------------------------------------------------------
-
+# ---------------------------------------------------------
+# CARREGAR EXCEL
+# ---------------------------------------------------------
 @st.cache_data(ttl=600)
 def load_job_profile():
     path = Path("data") / "Job Profile.xlsx"
@@ -110,15 +159,18 @@ def load_job_profile():
     return df
 
 df = load_job_profile()
+
 if df.empty:
-    st.error("Job Profile.xlsx não encontrado.")
+    st.error("Não foi possível carregar Job Profile.xlsx")
     st.stop()
 
-# FILTROS ------------------------------------------------------
-
+# ---------------------------------------------------------
+# FILTROS
+# ---------------------------------------------------------
 st.subheader("🔍 Explorador de Perfis")
 
 familias = sorted(df["Job Family"].dropna().unique())
+
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -133,37 +185,41 @@ with col3:
     trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
 
 filtered = df.copy()
-if familia!="Selecione...":
+if familia != "Selecione...":
     filtered = filtered[filtered["Job Family"] == familia]
-if sub!="Selecione...":
+if sub != "Selecione...":
     filtered = filtered[filtered["Sub Job Family"] == sub]
-if trilha!="Selecione...":
+if trilha != "Selecione...":
     filtered = filtered[filtered["Career Path"] == trilha]
 
-# PICKLIST -----------------------------------------------------
-
+# ---------------------------------------------------------
+# PICKLIST
+# ---------------------------------------------------------
 filtered["label"] = filtered.apply(
     lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
     axis=1
 )
-label_map = dict(zip(filtered["label"], filtered["Job Profile"]))
+label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selecionados_labels = st.multiselect(
-    "Selecione até 3 perfis:",
-    list(label_map.keys()),
+    "Selecione até 3 perfis para comparar:",
+    options=list(label_to_profile.keys()),
     max_selections=3,
 )
 
 if not selecionados_labels:
     st.stop()
 
-perfils = [label_map[l] for l in selecionados_labels]
-cards = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in perfils]
+selecionados = [label_to_profile[l] for l in selecionados_labels]
 
-# ÍCONES SVG ---------------------------------------------------
+rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
 
+# ---------------------------------------------------------
+# SVG inline
+# ---------------------------------------------------------
 def svg(name):
-    return Path(f"assets/icons/sig/{name}").read_text()
+    with open(f"assets/icons/sig/{name}", "r") as f:
+        return f.read()
 
 icons = {
     "Sub Job Family Description": svg("Hierarchy.svg"),
@@ -180,22 +236,25 @@ icons = {
 
 sections = list(icons.keys())
 
-# RENDER 3 CARDS ------------------------------------------------
+# ---------------------------------------------------------
+# RENDERIZAÇÃO
+# ---------------------------------------------------------
+st.markdown("### ✨ Comparativo de Perfis Selecionados")
 
 st.markdown('<div class="jp-grid">', unsafe_allow_html=True)
 
-for card in cards:
+for card in rows:
 
-    job = html.escape(card.get("Job Profile", ""))
+    job = html.escape(str(card.get("Job Profile", "")))
     gg = html.escape(str(card.get("Global Grade", "")))
-    jf = html.escape(card.get("Job Family", ""))
-    sf = html.escape(card.get("Sub Job Family", ""))
-    cp = html.escape(card.get("Career Path", ""))
-    fc = html.escape(card.get("Full Job Code", ""))
+    jf = html.escape(str(card.get("Job Family", "")))
+    sf = html.escape(str(card.get("Sub Job Family", "")))
+    cp = html.escape(str(card.get("Career Path", "")))
+    fc = html.escape(str(card.get("Full Job Code", "")))
 
-    st.markdown("<div class='jp-card'>", unsafe_allow_html=True)
+    card_html = f"""
+    <div class="jp-card">
 
-    st.markdown(f"""
         <div class="jp-title">{job}</div>
         <div class="jp-gg">GG {gg}</div>
 
@@ -205,21 +264,23 @@ for card in cards:
             <div><b>Career Path:</b> {cp}</div>
             <div><b>Full Job Code:</b> {fc}</div>
         </div>
-    """, unsafe_allow_html=True)
+    """
 
-    # Uma seção por linha (sincronizada)
     for sec in sections:
-        content = card.get(sec, "").strip()
-        if not content:
+        content = str(card.get(sec, "")).strip()
+        
+        if not content or content.lower() == "nan":
             content = "—"
 
-        st.markdown(f"""
-            <div class="jp-section">
-                <div class="jp-section-title">{icons[sec]} {sec}</div>
-                <div class="jp-text">{html.escape(content)}</div>
-            </div>
-        """, unsafe_allow_html=True)
+        card_html += f"""
+        <div class="jp-section">
+            <div class="jp-section-title">{icons[sec]}<span>{sec}</span></div>
+            <div class="jp-text">{html.escape(content)}</div>
+        </div>
+        """
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    card_html += "</div>"
+
+    st.markdown(card_html, unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
