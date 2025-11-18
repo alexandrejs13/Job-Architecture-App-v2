@@ -1,5 +1,5 @@
 /* ============================================================
-   FONTS PPSIGFlow — Caminho ABSOLUTO (funciona em app.py e páginas)
+   FONTS PPSIGFlow — Caminho absoluto (funciona no app.py e pages)
    ============================================================ */
 @font-face {
     font-family: "PPSIGFlow";
@@ -19,22 +19,22 @@
     font-weight: 700;
 }
 
-/* aplica a fonte global */
+/* aplica a fonte global SIG */
 html, body, [data-testid="stAppViewContainer"] {
     font-family: "PPSIGFlow", sans-serif !important;
     background: white !important;
+    color: #000 !important;
 }
 
 /* ============================================================
-   SIDEBAR SIG
+   SIDEBAR SIG — Sand 1 oficial
    ============================================================ */
-
 [data-testid="stSidebar"] {
-    background: #f5efe6 !important;   /* sand1 */
+    background: #f2efeb !important; /* SIG Sand 1 */
     width: 300px !important;
     min-width: 300px !important;
     max-width: 300px !important;
-    border-right: 1px solid #eee !important;
+    border-right: 1px solid #dedad6 !important;
     overflow-y: auto !important;
 }
 
@@ -42,18 +42,12 @@ html, body, [data-testid="stAppViewContainer"] {
     font-family: "PPSIGFlow" !important;
 }
 
-/* header lateral (nome da página atual) */
-[data-testid="stSidebar"] .css-1v0mbdj {
-    font-family: "PPSIGFlow" !important;
-    font-weight: 600 !important;
-}
-
 /* ============================================================
-   ÁREA PRINCIPAL CENTRALIZADA
+   ÁREA PRINCIPAL
    ============================================================ */
 .block-container {
     max-width: 1500px !important;
-    padding-top: 1rem;
+    padding-top: 1rem !important;
 }
 
 /* ============================================================
@@ -68,14 +62,14 @@ html, body, [data-testid="stAppViewContainer"] {
     border: none !important;
 }
 
-/* remove contorno azul feio */
+/* remove contorno azul */
 button:focus, button:active, *:focus {
     outline: none !important;
     box-shadow: none !important;
 }
 
 /* ============================================================
-   GRID RESPONSIVO — 1–2–3 COLUNAS
+   GRID RESPONSIVO (1, 2 ou 3 colunas)
    ============================================================ */
 .jp-grid {
     display: grid;
@@ -84,25 +78,19 @@ button:focus, button:active, *:focus {
 }
 
 @media (max-width: 899px) {
-    .jp-grid {
-        grid-template-columns: 1fr;
-    }
+    .jp-grid { grid-template-columns: 1fr; }
 }
 
 @media (min-width: 900px) and (max-width: 1299px) {
-    .jp-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .jp-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1300px) {
-    .jp-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .jp-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* ============================================================
-   CARDS DO JOB PROFILE
+   CARDS JOB PROFILE
    ============================================================ */
 .jp-card {
     background: #faf9f7;
@@ -119,7 +107,7 @@ button:focus, button:active, *:focus {
 .jp-header {
     padding: 22px;
     border-bottom: 1px solid #dfdad3;
-    background: #fff;
+    background: #ffffff;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -156,6 +144,7 @@ button:focus, button:active, *:focus {
     font-size: 0.92rem;
 }
 
+/* seção */
 .jp-section {
     margin-top: 24px;
     padding: 16px;
@@ -191,19 +180,19 @@ button:focus, button:active, *:focus {
     line-height: 1.4;
 }
 
+/* remove botão PDF */
 .jp-pdf-btn {
     display: none !important;
 }
 
 /* ============================================================
-   FIX DEFINITIVO — Streamlit NÃO ESCAPA HTML MAIS
+   FIX — evitar HTML escapado no st.markdown
    ============================================================ */
-
 [data-testid="stMarkdown"] pre,
 [data-testid="stMarkdown"] code,
 code, pre {
     all: unset !important;
-    display: inline !important;
     white-space: normal !important;
     font-family: "PPSIGFlow" !important;
+    display: inline !important;
 }
