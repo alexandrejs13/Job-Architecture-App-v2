@@ -173,9 +173,9 @@ def build_html(profiles):
         line-height: 1.45;
     }}
 
-    /* SCROLL AREA (UNIFIED SCROLL) */
+    /* SCROLL AREA (UNIFIED SCROLL dynamic height) */
     .scroll-area {{
-        height: 1500px;
+        height: calc(100vh - 330px);   /* 🔥🔥 PATCH APLICADO AQUI */
         overflow-y: auto;
         overflow-x: hidden;
         padding-right: 12px;
