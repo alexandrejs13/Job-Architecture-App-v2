@@ -1,79 +1,69 @@
 # Home - Job Architecture App
 
 import streamlit as st
-import base64
-import os
+from pathlib import Path
 
 # ==========================================================
-# CONFIG
+# CONFIG GERAL
 # ==========================================================
 st.set_page_config(
-    page_title="Job Architecture",
+    page_title="Job Architecture App",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded",
 )
 
 # ==========================================================
-# FUNÇÃO PARA CARREGAR PNG/JPG INLINE (BASE64)
+# CSS GLOBAL (se existir)
 # ==========================================================
-def load_image_b64(path):
-    if not os.path.exists(path):
-        return ""
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-
-# ==========================================================
-# CSS GLOBAL SIG  (o mesmo das outras páginas)
-# ==========================================================
-css_path = "assets/css/sig_style.css"
-if os.path.exists(css_path):
+css_path = Path("assets/css/main.css")
+if css_path.exists():
     with open(css_path, "r", encoding="utf-8") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-
-# ==========================================================
-# FONTES PP SIG FLOW — carregadas igual nas outras páginas
-# ==========================================================
-try:
-    from utils.fonts import load_pp_fonts
-    load_pp_fonts()
-except:
-    pass
-
+        css_content = f.read()
+    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
 
 # ==========================================================
-# IMAGEM DE CAPA — PRIMEIRO ELEMENTO DA PÁGINA
+# LAYOUT PRINCIPAL - SEM HEADER COM ÍCONE/TÍTULO
+# A página começa diretamente pela imagem HERO
 # ==========================================================
-home_img_path = "assets/home/home_card.jpg"
-home_img_b64 = load_image_b64(home_img_path)
 
-st.markdown(
-    f"""
-    <div class="sig-container" style="margin-top: 12px; margin-bottom: 32px;">
-        <img 
-            src="data:image/jpeg;base64,{home_img_b64}" 
-            style="
-                width: 100%;
-                max-width: 1400px;
-                display: block;
-                margin: 0 auto;
-                border-radius: 12px;
-            "
-        >
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# Container de largura máxima, alinhado com as demais páginas
+with st.container():
+    # ======================================================
+    # HERO IMAGE – mesma largura das demais páginas
+    # ======================================================
+    st.markdown(
+        """
+        <div style="
+            display:flex;
+            justify-content:flex-start;
+            align-items:flex-start;
+            margin-top:16px;
+            margin-bottom:28px;
+        ">
+            <img 
+                src="assets/home/home_card.jpg" 
+                alt="Job Architecture Hero" 
+                style="
+                    width:100%;
+                    max-width:1180px;
+                    border-radius:26px;
+                    object-fit:cover;
+                    display:block;
+                "
+            >
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-
-# ==========================================================
-# BLOCO DO TÍTULO + TEXTO (EXATAMENTE COMO VOCÊ ENVIOU)
-# ==========================================================
-st.markdown(
-    """
-    <div class="sig-container" style="margin-top: 0px;">
-
+    # ======================================================
+    # BLOCO DE TEXTO PRINCIPAL – IDENTIDADE VISUAL SIG
+    # Usando as fontes já carregadas pelo main.css:
+    #   - 'PP-Sigflow-SemiBold'
+    #   - 'PP-Sigflow-Regular'
+    # ======================================================
+    st.markdown(
+        """
         <h1 style="
             font-family: 'PP-Sigflow-SemiBold';
             font-size: 40px;
@@ -97,8 +87,6 @@ st.markdown(
             Explore as seções ao lado para navegar por famílias, perfis, comparações, dashboards 
             e muito mais — tudo com a identidade visual SIG e uma experiência totalmente integrada.
         </p>
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+        """,
+        unsafe_allow_html=True,
+    )
