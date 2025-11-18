@@ -1,5 +1,5 @@
 /* ============================================================
-   FONTS PPSIGFlow — Regular, SemiBold, Bold
+   FONTS PPSIGFlow
    ============================================================ */
 @font-face {
     font-family: "PPSIGFlow";
@@ -18,16 +18,248 @@
 }
 
 /* ============================================================
-   GLOBAL — aplica fonte SIG em tudo
+   APLICAÇÃO GLOBAL DA FONTE E CORES BASE
    ============================================================ */
-html, body, [data-testid="stAppViewContainer"], * {
+html, body, [data-testid="stAppViewContainer"] {
     font-family: "PPSIGFlow", sans-serif !important;
     color: #000 !important;
     background: white !important;
 }
 
+/* Aplica PPSIGFlow em TODOS os elementos */
+[data-testid="stAppViewContainer"] * {
+    font-family: "PPSIGFlow", sans-serif !important;
+    color: #000 !important;
+}
+
 /* ============================================================
-   SIDEBAR — Sand 1 oficial SIG
+   SIDEBAR SIG (Sand 1)
    ============================================================ */
 [data-testid="stSidebar"] {
-    ba
+    background: #f2efeb !important; /* SIG Sand 1 */
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    border-right: 1px solid #dedad6 !important;
+    overflow-y: auto !important;
+}
+
+/* Fonte da sidebar */
+[data-testid="stSidebar"] * {
+    font-family: "PPSIGFlow", sans-serif !important;
+    color: #000 !important;
+}
+
+/* Itens do menu — tamanho padrão */
+[data-testid="stSidebar"] div[role="list"] a,
+[data-testid="stSidebar"] div[role="list"] > div {
+    font-size: 20px !important;
+    font-weight: 500 !important;
+}
+
+/* Item selecionado */
+[data-testid="stSidebar"] .highlighted {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+}
+
+/* Hover */
+[data-testid="stSidebar"] a:hover {
+    opacity: 0.75 !important;
+}
+
+/* ============================================================
+   CORREÇÃO EXCLUSIVA DO ITEM “app”
+   ============================================================ */
+/* item “app” fica igual aos demais */
+[data-testid="stSidebar"] div[role="list"] a[href="/"] {
+    font-size: 20px !important;
+    font-weight: 500 !important;
+}
+
+/* Quando “app” estiver selecionado */
+[data-testid="stSidebar"] div[role="list"] a[href="/"].highlighted {
+    font-weight: 700 !important;
+}
+
+/* ============================================================
+   HEADER / TOOLBAR — remove texto fantasma e mantém seta
+   ============================================================ */
+/* remove qualquer texto como “keyb/keyt” */
+header [data-testid="stToolbar"] div {
+    font-size: 0 !important;
+    color: transparent !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+}
+
+/* mantém somente os ícones */
+header [data-testid="stToolbar"] svg {
+    width: 22px !important;
+    height: 22px !important;
+    color: #000 !important;
+    display: inline-flex !important;
+}
+
+/* header alinhado e limpo */
+header {
+    background: white !important;
+    align-items: center !important;
+}
+
+/* ============================================================
+   ÁREA PRINCIPAL
+   ============================================================ */
+.block-container {
+    max-width: 1500px !important;
+    padding-top: 1rem !important;
+}
+
+/* ============================================================
+   BOTÕES SIG
+   ============================================================ */
+.stButton > button {
+    background: #145efc !important;
+    color: white !important;
+    border-radius: 28px !important;
+    font-weight: 700 !important;
+    padding: 10px 22px !important;
+    border: none !important;
+}
+
+/* remove outline azul */
+button:focus, button:active, *:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* ============================================================
+   GRID RESPONSIVO (Job Profiles, Cards, etc.)
+   ============================================================ */
+.jp-grid {
+    display: grid;
+    gap: 22px;
+    width: 100%;
+}
+
+@media (max-width: 899px) {
+    .jp-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 900px) and (max-width: 1299px) {
+    .jp-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1300px) {
+    .jp-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ============================================================
+   CARDS — Job Profile
+   ============================================================ */
+.jp-card {
+    background: #faf9f7;
+    border-radius: 14px;
+    border: 1px solid #e6e2db;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 650px;
+    overflow: hidden;
+    position: relative;
+}
+
+.jp-header {
+    padding: 22px;
+    border-bottom: 1px solid #dfdad3;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.jp-scroll {
+    padding: 20px 24px;
+    overflow-y: auto;
+}
+
+.jp-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #222;
+    margin: 0 0 6px 0;
+}
+
+.jp-gg {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #145efc;
+}
+
+.jp-meta-block {
+    margin-top: 15px;
+    padding: 16px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #ece7e0;
+}
+
+.jp-meta-row {
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+}
+
+/* seção */
+.jp-section {
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 10px;
+    border-left: 6px solid #145efc22;
+}
+
+.jp-section:nth-child(even) {
+    background: #fdfbf8;
+}
+
+.jp-section:nth-child(odd) {
+    background: #ffffff;
+}
+
+.jp-section-title {
+    font-weight: 800;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jp-section-title svg {
+    width: 22px;
+    height: 22px;
+}
+
+.jp-text {
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.jp-pdf-btn {
+    display: none !important;
+}
+
+/* ============================================================
+   FIX — impedir HTML escapado no st.markdown
+   ============================================================ */
+[data-testid="stMarkdown"] pre,
+[data-testid="stMarkdown"] code,
+code, pre {
+    all: unset !important;
+    white-space: normal !important;
+    font-family: "PPSIGFlow" !important;
+    display: inline !important;
+}
