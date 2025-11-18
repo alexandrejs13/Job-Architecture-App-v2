@@ -1,6 +1,5 @@
 import streamlit as st
 import base64
-import os
 from pathlib import Path
 
 # ==========================================================
@@ -14,8 +13,27 @@ st.set_page_config(
 BASE_DIR = Path(__file__).parent
 
 # ==========================================================
-# CSS GLOBAL SIG (MESMO DAS OUTRAS PÁGINAS)
+# FIX DEFINITIVO: Ocultar item "app" do menu e resolver conflito
 # ==========================================================
+# Injeta CSS de alta prioridade no Streamlit para ocultar o link da página principal ("/")
+# e garantir que não haja conflito com o botão de recolher.
+st.markdown("""
+<style>
+/* 1. Oculta o link de navegação da página inicial (item "app"). Este seletor é o mais comum para o item. */
+[data-testid="stSidebarNav"] a[href="/"] {
+    display: none !important;
+}
+/* 2. Oculta o rótulo da aplicação ("streamlitApp" ou texto fantasma) que aparece na barra lateral/cabeçalho. */
+[data-testid="stSidebarContent"] > div:first-child > div:first-child > div:nth-child(2) {
+    display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================================
+# CSS GLOBAL SIG
+# ==========================================================
+# Mantém a injeção do CSS global para as outras páginas
 css_path = BASE_DIR / "assets" / "css" / "layout_global.css"
 
 if css_path.exists():
@@ -24,69 +42,8 @@ if css_path.exists():
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 # ==========================================================
-# FUNÇÃO PARA CARREGAR IMAGEM EM BASE64
+# CONTEÚDO DA PÁGINA
 # ==========================================================
-def load_image_base64(path: Path) -> str:
-    if not path.exists():
-        return ""
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-# ==========================================================
-# HERO IMAGE – MESMA LARGURA DO CONTEÚDO
-# ==========================================================
-hero_path = BASE_DIR / "assets" / "home" / "home_card.jpg"
-hero_b64 = load_image_base64(hero_path)
-
-if hero_b64:
-    st.markdown(
-        f"""<div style="max-width:1100px;margin:32px auto 0 auto;">
-<img 
-    src="data:image/jpeg;base64,{hero_b64}" 
-    alt="Job Architecture" 
-    style="
-        width:100%;
-        height:auto;
-        display:block;
-        border-radius:28px;
-        box-shadow:0 20px 40px rgba(0,0,0,0.18);
-    "
-/>
-</div>""",
-        unsafe_allow_html=True,
-    )
-
-# ==========================================================
-# BLOCO DE TEXTO – MESMA LARGURA DA IMAGEM
-# ==========================================================
-st.markdown(
-    """<div style="max-width:1100px;margin:32px auto 0 auto;">
-<h1 style="
-    font-family:'PPSIGFlow';
-    font-size:40px;
-    font-weight:600;
-    margin:0 0 16px 0;
-    color:#000;
-">
-    Job Architecture
-</h1>
-
-<p style="
-    font-family:'PPSIGFlow';
-    font-size:18px;
-    font-weight:400;
-    line-height:1.6;
-    max-width:900px;
-    color:#000;
-    margin:0;
-">
-    Bem-vindo ao portal de Job Architecture. Aqui você encontra as estruturas organizadas 
-    de famílias de cargos, perfis de posição, níveis, responsabilidades e competências 
-    essenciais para garantir consistência, governança e alinhamento global.
-    <br><br>
-    Explore as seções ao lado para navegar por famílias, perfis, comparações, dashboards 
-    e muito mais — tudo com a identidade visual SIG e uma experiência totalmente integrada.
-</p>
-</div>""",
-    unsafe_allow_html=True,
-)
+# A página principal está vazia, conforme solicitado.
+# A aplicação agora começará na próxima página do menu (ex: 1_Job_Architecture.py),
+# e o item "app" estará oculto.
