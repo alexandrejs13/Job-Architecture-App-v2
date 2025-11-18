@@ -33,7 +33,6 @@ if os.path.exists(css_path):
 
 # ==========================================================
 # FONTES PP SIG FLOW
-# (caso você tenha utils/font.py, senão posso gerar)
 # ==========================================================
 try:
     from utils.fonts import load_pp_fonts
@@ -43,14 +42,14 @@ except:
 
 
 # ==========================================================
-# IMAGEM DE CAPA — SEM TÍTULO, SEM ÍCONE
+# IMAGEM DE CAPA — SEM TÍTULO NO HEADER
 # ==========================================================
 home_img_path = "assets/home/home_card.jpg"
 home_img_b64 = load_image_b64(home_img_path)
 
 st.markdown(
     f"""
-    <div class="sig-container" style="margin-top: 12px;">
+    <div class="sig-container" style="margin-top: 12px; margin-bottom: 32px;">
         <img 
             src="data:image/jpeg;base64,{home_img_b64}" 
             style="width: 100%; max-width: 1400px; display: block; margin: 0 auto; border-radius: 12px;"
@@ -59,3 +58,25 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+
+# ==========================================================
+# TÍTULO + TEXTO DESCRITIVO (CONTEÚDO ORIGINAL)
+# ==========================================================
+
+st.markdown("""
+<div class="sig-container" style="margin-top: 0px;">
+    <h1 style="font-family: 'PP-Sigflow-SemiBold'; font-size: 40px; margin-bottom: 10px;">
+        Job Architecture
+    </h1>
+
+    <p style="font-size: 18px; line-height: 1.6; max-width: 900px;">
+        Bem-vindo ao portal de Job Architecture. Aqui você encontra as estruturas organizadas 
+        de famílias de cargos, perfis de posição, níveis, responsabilidades e competências 
+        essenciais para garantir consistência, governança e alinhamento global.
+        <br><br>
+        Explore as seções ao lado para navegar por famílias, perfis, comparações, dashboards 
+        e muito mais — tudo com a identidade visual SIG e uma experiência totalmente integrada.
+    </p>
+</div>
+""", unsafe_allow_html=True)
