@@ -84,12 +84,11 @@ html, body, [data-testid="stAppViewContainer"] {
 
 /* ============================================================
     HEADER / TOOLBAR — LIMPEZA E AJUSTE DO BOTÃO DE RECOLHER
-    (REVISADO PARA CORRIGIR O ERRO "key...")
+    (FIX COMPLETO PARA O ERRO "key...")
     ============================================================ */
 
-/* 1. Limpa o rótulo da aplicação e texto residual (como "streamlitApp" ou "keyb")
-   que aparece no header/toolbar, sem danificar o botão de expansão. */
-header [data-testid="stAppViewContainer"] > div:first-child > div:nth-child(2) > div:nth-child(2) {
+/* 1. Limpa qualquer texto residual no cabeçalho (toolbar), mantendo o botão de expansão intacto. */
+header [data-testid="stToolbar"] div:not(:has(button)) {
     visibility: hidden;
     height: 0;
     max-width: 0;
@@ -98,7 +97,12 @@ header [data-testid="stAppViewContainer"] > div:first-child > div:nth-child(2) >
     margin: 0;
 }
 
-/* 2. Garante que o ícone do botão de expansão/recolhimento apareça corretamente. */
+/* 2. Oculta o rótulo da aplicação na barra lateral (ex: "streamlitApp") que interfere na página "app". */
+[data-testid="stSidebarContent"] > div:first-child > div:first-child > div:nth-child(2) {
+    display: none !important;
+}
+
+/* 3. Garante que o ícone do botão de expansão/recolhimento apareça corretamente. */
 [data-testid="stToolbar"] button {
     background: none !important;
     color: #000 !important; /* Cor do ícone */
@@ -108,7 +112,7 @@ header [data-testid="stAppViewContainer"] > div:first-child > div:nth-child(2) >
     margin-right: 10px;
 }
 
-/* 3. Ajusta o alinhamento e fundo do header */
+/* 4. Ajusta o alinhamento e fundo do header */
 header {
     background: white !important;
     align-items: center !important;
