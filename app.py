@@ -1,31 +1,31 @@
 import streamlit as st
 import base64
 import os
+from pathlib import Path
 
 # ==========================================================
-# CONFIG GERAL — mesmo padrão das demais páginas
+# CONFIG GERAL – igual às demais páginas
 # ==========================================================
 st.set_page_config(
     page_title="Job Architecture",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # ==========================================================
-# APLICA CSS GLOBAL (layout_global.css) — fonte PPSIGFlow + sidebar
+# CARREGA CSS GLOBAL (layout_global.css)
 # ==========================================================
-def load_global_css(path: str):
-    """Carrega o CSS global para aplicar fonte PPSIGFlow e layout padrão."""
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
+def load_global_css():
+    css_path = Path("assets/css/layout_global.css")
+    if css_path.exists():
+        with open(css_path, "r", encoding="utf-8") as f:
             css = f.read()
         st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-# caminho relativo dentro do projeto
-css_path = os.path.join("assets", "css", "layout_global.css")
-load_global_css(css_path)
+load_global_css()
 
 # ==========================================================
-# FUNÇÃO PARA CARREGAR IMAGEM INLINE (hero)
+# FUNÇÃO PARA CARREGAR IMAGEM EM BASE64
 # ==========================================================
 def load_image_b64(path: str) -> str:
     if not os.path.exists(path):
@@ -34,43 +34,42 @@ def load_image_b64(path: str) -> str:
         return base64.b64encode(f.read()).decode("utf-8")
 
 # ==========================================================
-# HERO IMAGE — primeira coisa da página (sem título/ícone antes)
+# HERO IMAGE – mesma largura das demais páginas
 # ==========================================================
-hero_path = os.path.join("assets", "home", "home_card.jpg")
+hero_path = "assets/home/home_card.jpg"
 hero_b64 = load_image_b64(hero_path)
 
-if hero_b64:
-    st.markdown(
-        f"""
-        <div style="
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
-            margin-bottom: 30px;
-        ">
-            <img 
-                src="data:image/jpg;base64,{hero_b64}" 
-                style="
-                    width: 100%;
-                    max-width: 1100px;
-                    border-radius: 28px;  /* cantos mais arredondados */
-                    display: block;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-                "
-            >
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-else:
-    # fallback simples caso a imagem não seja encontrada
-    st.warning("Imagem de capa não encontrada em 'assets/home/home_card.jpg'.")
+st.markdown(
+    f"""
+<div style="
+    max-width: 1100px;
+    margin: 24px auto 40px auto;
+">
+    <img 
+        src="data:image/jpg;base64,{hero_b64}" 
+        alt="Job Architecture"
+        style="
+            width: 100%;
+            height: auto;
+            border-radius: 28px;
+            display: block;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        "
+    >
+</div>
+""",
+    unsafe_allow_html=True,
+)
 
 # ==========================================================
-# TÍTULO + TEXTO — usando fonte PPSIGFlow (já registrada no CSS)
+# TÍTULO + TEXTO – alinhados com a imagem, fonte SIG
 # ==========================================================
 st.markdown(
     """
+<div style="
+    max-width: 1100px;
+    margin: 0 auto 80px auto;
+">
     <h1 style="
         font-family: 'PPSIGFlow';
         font-size: 40px;
@@ -96,6 +95,7 @@ st.markdown(
         Explore as seções ao lado para navegar por famílias, perfis, comparações, dashboards 
         e muito mais — tudo com a identidade visual SIG e uma experiência totalmente integrada.
     </p>
-    """,
+</div>
+""",
     unsafe_allow_html=True,
 )
