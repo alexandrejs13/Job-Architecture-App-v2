@@ -29,7 +29,6 @@ def header(icon_path: str, title: str) -> None:
             """,
             unsafe_allow_html=True,
         )
-    # subtle divider
     st.markdown("<hr style='margin-top:8px; margin-bottom:4px;'>", unsafe_allow_html=True)
 
 
@@ -76,30 +75,35 @@ html, body, [data-testid="stAppViewContainer"] {
     width: 100%;
 }
 
-/* sticky strip that keeps the 3 header cards always visible */
+/* sticky row with header cards */
 .jp-header-row {
     position: sticky;
-    top: 80px;  /* below Streamlit top bar + page title */
-    z-index: 40;
-    padding: 4px 0 14px 0;
-    /* white background so text from sections never appears behind */
+    top: 78px;
+    z-index: 50;
+
+    padding-top: 18px;
+    padding-bottom: 22px;
+
     background: linear-gradient(
         to bottom,
         #ffffff 0%,
-        #ffffff 70%,
-        rgba(255,255,255,0.96) 85%,
+        #ffffff 60%,
+        rgba(255,255,255,0.95) 80%,
+        rgba(255,255,255,0.85) 92%,
         rgba(255,255,255,0.0) 100%
     );
+
+    backdrop-filter: blur(2px);
 }
 
-/* common grid for header and body rows */
+/* grid for header row and body row */
 .jp-header-row,
 .jp-body-row {
     display: grid;
     gap: 24px;
 }
 
-/* header cards – ONLY title + GG + meta block */
+/* HEADER CARD – fixed section */
 .jp-header-card {
     background: #ffffff;
     border-radius: 18px;
@@ -108,20 +112,16 @@ html, body, [data-testid="stAppViewContainer"] {
     padding: 20px 22px 18px 22px;
 }
 
-/* body row with all long descriptions */
-.jp-body-row {
-    margin-top: 8px;
-    display: grid;
-    gap: 24px;
-}
-
-/* body cards – continuous content sections */
+/* BODY CARD – content with overflow hidden patch */
 .jp-body-card {
     background: #ffffff;
     border-radius: 18px;
     border: 1px solid #e6e6e6;
     box-shadow: 0 4px 10px rgba(15, 18, 35, 0.08);
     padding: 16px 22px 8px 22px;
+
+    /* 🔥 prevents text from leaking above the card */
+    overflow: hidden;
 }
 
 /* title & GG inside header card */
@@ -183,7 +183,7 @@ html, body, [data-testid="stAppViewContainer"] {
     white-space: pre-wrap;
 }
 
-/* subtle footer with PDF icon */
+/* PDF icon */
 .jp-footer {
     padding-top: 12px;
     text-align: right;
@@ -218,7 +218,7 @@ def load_job_profile():
 
 df = load_job_profile()
 if df.empty:
-    st.error("Error loading Job Profile.xlsx. Please check the file in the data folder.")
+    st.error("Error loading Job Profile.xlsx. Please check the file.")
     st.stop()
 
 
@@ -263,16 +263,16 @@ if sub_family != "Select...":
 if career_path != "Select...":
     filtered = filtered[filtered["Career Path"] == career_path]
 
-# build label for the multiselect
-if not filtered.empty:
-    filtered = filtered.copy()
-    filtered["label"] = filtered.apply(
-        lambda r: f"GG {str(r.get('Global Grade', '')).replace('.0','')} • {r.get('Job Profile', '')}",
-        axis=1,
-    )
-    label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
-else:
-    label_to_profile = {}
+if filtered.empty:
+    st.info("No profiles match your filters.")
+    st.stop()
+
+# multiselect labels
+filtered["label"] = filtered.apply(
+    lambda r: f"GG {str(r.get('Global Grade', '')).replace('.0','')} • {r.get('Job Profile', '')}",
+    axis=1,
+)
+label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selected_labels = st.multiselect(
     "Select up to 3 profiles to compare:",
@@ -281,7 +281,6 @@ selected_labels = st.multiselect(
 )
 
 if not selected_labels:
-    st.info("Please select at least one profile to see the comparison.")
     st.stop()
 
 selected_profiles = [label_to_profile[l] for l in selected_labels]
@@ -314,7 +313,7 @@ sections_order = list(icons.keys())
 
 
 # ==========================================================
-# BUILD HTML FOR HEADER CARDS + BODY CARDS
+# BUILD HTML
 # ==========================================================
 page_html_parts = [f'<div class="jp-page">']
 
@@ -340,15 +339,19 @@ for card in rows:
     header_card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
     header_card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     header_card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    header_card_html.append("</div>")  # meta-block
-    header_card_html.append("</div>")  # jp-header-card
+    header_card_html.append("</div>")
+    header_card_html.append("</div>")
 
     page_html_parts.append("".join(header_card_html))
 
 page_html_parts.append("</div>")  # end header row
 
 
-# ----- body row with continuous descriptions -----
+# ----- OPTIONAL invisible buffer -----
+page_html_parts.append('<div style="height:24px;"></div>')
+
+
+# ----- body row with all descriptions -----
 page_html_parts.append(
     f'<div class="jp-body-row" style="{grid_style}">'
 )
@@ -357,42 +360,36 @@ for card in rows:
     body_html = []
     body_html.append('<div class="jp-body-card">')
 
-    # each section in fixed order if content exists
     for idx, sec in enumerate(sections_order):
-        raw_content = str(card.get(sec, "") or "").strip()
-        if not raw_content or raw_content.lower() == "nan":
+        content = str(card.get(sec, "") or "").strip()
+        if not content or content.lower() == "nan":
             continue
 
         icon_file = icons.get(sec, "")
-        alt_class = " alt" if idx % 2 == 1 else ""
+        alt = " alt" if idx % 2 == 1 else ""
 
-        body_html.append(f'<div class="jp-section{alt_class}">')
-        if icon_file:
-            body_html.append(
-                f'<div class="jp-section-title">'
-                f'<img src="assets/icons/sig/{icon_file}"> {sec}'
-                f'</div>'
-            )
-        else:
-            body_html.append(f'<div class="jp-section-title">{sec}</div>')
-
+        body_html.append(f'<div class="jp-section{alt}">')
         body_html.append(
-            f'<div class="jp-text">{html.escape(raw_content)}</div>'
+            f'<div class="jp-section-title">'
+            f'<img src="assets/icons/sig/{icon_file}"> {sec}'
+            f'</div>'
         )
-        body_html.append("</div>")  # jp-section
+        body_html.append(
+            f'<div class="jp-text">{html.escape(content)}</div>'
+        )
+        body_html.append("</div>")
 
-    # footer with (future) PDF export icon
     body_html.append('<div class="jp-footer">')
     body_html.append(
-        '<img src="assets/icons/sig/pdf_c3_white.svg" title="Export to PDF">'
+        '<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">'
     )
-    body_html.append("</div>")  # jp-footer
+    body_html.append("</div>")
 
-    body_html.append("</div>")  # jp-body-card
-
+    body_html.append("</div>")
     page_html_parts.append("".join(body_html))
 
-page_html_parts.append("</div>")  # end body row
-page_html_parts.append("</div>")  # end jp-page wrapper
+
+page_html_parts.append("</div>")  # body row
+page_html_parts.append("</div>")  # jp-page wrapper
 
 st.markdown("".join(page_html_parts), unsafe_allow_html=True)
