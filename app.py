@@ -44,9 +44,9 @@ p.sig-subtitle {{
 
 <div style="text-align:center; padding-top:40px;">
 
-    <!-- Elegant icon size + closer spacing -->
+    <!-- ICON — Elegant: 300px + small spacing -->
     <img src="data:image/png;base64,{icon_b64}"
-         style="width:360px; margin-bottom:16px;">  
+         style="width:300px; margin-bottom:10px;">
 
     <h1 class="sig-title">Job Architecture</h1>
 
