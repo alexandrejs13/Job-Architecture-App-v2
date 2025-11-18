@@ -8,20 +8,17 @@ import os
 st.set_page_config(page_title="Job Architecture", layout="wide")
 
 # ==========================================================
-# FUNÇÃO PARA CARREGAR PNG INLINE
+# LOAD ICON
 # ==========================================================
 def load_icon_png(path):
-    if not os.path.exists(path):
-        return ""
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-# ==========================================================
-# HEADER — padrão SIG (igual todas as páginas)
-# ==========================================================
-icon_path = "assets/icons/governance.png"
-icon_b64 = load_icon_png(icon_path)
+icon_b64 = load_icon_png("assets/icons/governance.png")
 
+# ==========================================================
+# HEADER — EXACTLY SAME VISUAL STANDARD
+# ==========================================================
 st.markdown(f"""
 <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
     <img src="data:image/png;base64,{icon_b64}" style="width:56px; height:56px;">
@@ -33,54 +30,128 @@ st.markdown(f"""
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
 
+
 # ==========================================================
-# CSS E BLOCO CENTRAL
+# MAIN TEXT — HIGHLY DETAILED, METHODOLOGICAL, IN ENGLISH
 # ==========================================================
-html = f"""
-<style>
-@font-face {{
-    font-family: 'SIGFlowBold';
-    src: url('assets/css/fonts/PPSIGFlow-Bold.otf') format('opentype');
-}}
+st.markdown("""
+### What Job Architecture Really Is
 
-@font-face {{
-    font-family: 'SIGFlowRegular';
-    src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
-}}
+**Job Architecture** is the structural framework that defines how every role in an organization fits together.  
+It shapes how jobs are grouped, compared, evaluated, and aligned across different functions, countries, and career paths.
 
-h1.sig-title {{
-    font-family: 'SIGFlowBold', sans-serif;
-    font-size: 52px;
-    text-align: center;
-    margin: 0;
-}}
+Rather than relying on job titles — which often vary or lose meaning over time — Job Architecture focuses on:
 
-p.sig-subtitle {{
-    font-family: 'SIGFlowRegular', sans-serif;
-    font-size: 20px;
-    color: #555;
-    text-align: center;
-    max-width: 900px;
-    margin: 14px auto 0 auto;
-    line-height: 1.45;
-}}
-</style>
+- **organizational impact**  
+- **complexity of decisions**  
+- **knowledge required**  
+- **scope of influence**  
+- **problem-solving autonomy**  
+- **expected contribution to business results**
 
-<div style="text-align:center; padding-top:20px;">
+It is the foundation that links jobs to levels, grades, families, compensation, and career development.
 
-    <h1 class="sig-title">O que é Job Architecture?</h1>
+---
 
-    <p class="sig-subtitle">
-        Job Architecture é a estrutura que organiza todos os cargos da empresa de forma clara, lógica e comparável. 
-        Ela define famílias, níveis, escopos e critérios objetivos que diferenciam cada papel, permitindo consistência 
-        global na classificação e avaliação das funções. Essa organização cria um padrão único para entender senioridade, 
-        complexidade e responsabilidade, fortalecendo governança, equidade interna e decisões transparentes de 
-        remuneração e carreira. Com uma arquitetura bem desenhada, a empresa consegue alinhar expectativas, facilitar 
-        mobilidade interna e garantir que posições semelhantes sejam tratadas com a mesma lógica em todas as áreas 
-        e geografias.
-    </p>
+### Why Organizations Use Job Architecture
 
-</div>
-"""
+Companies adopt a Job Architecture because it:
 
-st.components.v1.html(html, height=700)
+- creates **logical, repeatable criteria** for evaluating roles  
+- eliminates inconsistencies caused by local titles  
+- enables a **transparent and fair career structure**  
+- supports global mobility and internal movement  
+- aligns compensation to the *real size* of the job, not to the title  
+- strengthens governance over hiring, promotion, and organizational design  
+- clarifies expectations at each level and career stage  
+
+A well-designed architecture ensures that similar roles are treated similarly, regardless of geography or team.
+
+---
+
+### Core Components of Job Architecture
+
+A complete architecture is built on several interconnected components:
+
+#### **1. Job Families**
+Clusters of work with similar purpose or discipline.  
+Examples: Finance, Engineering, HR, Technology, Commercial, Operations.
+
+#### **2. Job Subfamilies**
+More specific concentrations of expertise within a job family.  
+Examples: Payroll, Software Engineering, Supply Chain, Total Rewards.
+
+#### **3. Job Levels**
+A standardized hierarchy defining progression of responsibility, decision-making, and scope.  
+Each level describes how the role contributes to the organization.
+
+#### **4. Job Profiles**
+Clear definitions of what each role *does*, including:  
+responsibilities, required skills, knowledge, complexity, autonomy, and typical outcomes.
+
+#### **5. Career Streams**
+Pathways that reflect how careers grow:
+- Management  
+- Professional/Expert  
+- Project or Program Leadership  
+- Operations / Technical Tracks  
+
+These streams align roles with different forms of impact — whether through expertise, leadership, or execution.
+
+---
+
+### How Jobs Are Evaluated and Positioned
+
+Job Architecture relies on structured analysis to place each role in the correct level.  
+This evaluation considers:
+
+- **impact on business outcomes**  
+- **breadth of influence** (team, department, enterprise)  
+- **complexity of decisions**  
+- **nature of problems solved**  
+- **technical depth and conceptual thinking**  
+- **autonomy versus guidance required**  
+- **stakeholder management and communication demands**  
+
+The result is a consistent map: each job is positioned based on its *real* contribution and complexity, not on historical naming or local preference.
+
+---
+
+### Why Job Architecture Is a Strategic Tool
+
+#### **Talent Management**
+Employees clearly understand what progression looks like and what skills or behaviors differentiate each level.
+
+#### **Internal Equity**
+Roles with similar complexity sit at similar levels, avoiding favoritism or inflation.
+
+#### **Global Standardization**
+Different regions and functions follow the same framework, reducing fragmentation.
+
+#### **Compensation Governance**
+Grades, pay ranges, and reward programs align organically with the architecture.
+
+#### **Organizational Design**
+Leaders gain visibility over overlaps, gaps, layering problems, and inconsistencies across teams.
+
+---
+
+### The Value It Creates
+
+In practice, a solid Job Architecture enables:
+
+- **predictable career growth**  
+- **fairness in promotions**  
+- **stronger hiring discipline**  
+- **competitive and consistent pay practices**  
+- **better workforce planning**  
+- **clear communication of expectations**  
+
+It becomes a living system that connects talent, performance, structure, and rewards.
+
+---
+
+Job Architecture is not just a catalog of jobs;  
+it is the **operating system** that organizes how the company understands work, evaluates roles, and enables people to grow.
+""")
+
