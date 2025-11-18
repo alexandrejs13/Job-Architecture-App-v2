@@ -65,15 +65,6 @@ section.main > div {{
     margin: 28px 0 20px 0;
 }}
 
-.chart-card {{
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 20px 26px;
-    border: 1px solid #e4e4e4;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    margin-bottom: 26px;
-}}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -125,7 +116,7 @@ with tab1:
 
     st.markdown("## Executive Job Architecture Overview")
 
-    # ========== KPIs HORIZONTAIS REAL OFICIAL ==========
+    # ========== KPIs HORIZONTAIS ==========
     kpis = {
         "Job Families": df[COL_FAMILY].nunique(),
         "Subfamilies": df[COL_SUBFAMILY].nunique(),
@@ -183,9 +174,7 @@ with tab1:
         .properties(height=40 * len(grade_df))
     )
 
-    st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
     st.altair_chart(chart, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
 
 
@@ -261,13 +250,9 @@ with tab2:
         )
     )
 
-    st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
     st.altair_chart(bars, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
-    # --------------------- Data Table --------------------------
+
+    # --------------------- Profiles Table --------------------------
     st.markdown("### Profiles in Subfamily")
-
-    st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
     st.dataframe(sub_df[[COL_PROFILE, COL_PATH, COL_GRADE]], use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
