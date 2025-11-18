@@ -1,154 +1,112 @@
 # pages/3_Job_Profile_Description.py
-# Job Profile Description – Comparison up to 3 profiles
+# FINAL VERSION – FULL HTML LAYOUT WITH ST.HTML (OPTION A)
 
 import streamlit as st
 import pandas as pd
 import html
 from pathlib import Path
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # PAGE CONFIG
-# =============================================================================
+# -----------------------------------------------------------------------------
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
-# =============================================================================
-# HEADER
-# =============================================================================
-def header(icon_path, title: str):
-    col1, col2 = st.columns([0.08, 0.92])
-    with col1:
-        st.image(icon_path, width=48)
-    with col2:
-        st.markdown(
-            f"""
-            <h1 style="margin:0; padding:0; font-size:36px; font-weight:700;">
-                {html.escape(title)}
-            </h1>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown(
-        "<hr style='margin-top:8px; margin-bottom:18px;'>",
-        unsafe_allow_html=True,
-    )
+# -----------------------------------------------------------------------------
+# PAGE HEADER
+# -----------------------------------------------------------------------------
+st.markdown("""
+<h1 style="font-size:36px; font-weight:700; margin:0;">
+    Job Profile Description
+</h1>
+<hr style="margin-top:8px;">
+""", unsafe_allow_html=True)
 
-header("assets/icons/business_review_clipboard.png", "Job Profile Description")
-
-# =============================================================================
-# GLOBAL CSS
-# =============================================================================
-custom_css = """
+# -----------------------------------------------------------------------------
+# CSS – FULL CONTROL
+# -----------------------------------------------------------------------------
+CSS = """
 <style>
-/* ------------------------------------------------------------------ */
-/* FONTS                                                              */
-/* ------------------------------------------------------------------ */
-@font-face {
-    font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
-    font-weight: 400;
-}
-@font-face {
-    font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-SemiBold.otf') format('opentype');
-    font-weight: 600;
-}
-@font-face {
-    font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-Bold.otf') format('opentype');
-    font-weight: 700;
+
+body, html, [data-testid="stAppViewContainer"] {
+    font-family: 'Segoe UI', sans-serif !important;
 }
 
-html, body, [data-testid="stAppViewContainer"] {
-    font-family: 'PPSIGFlow', sans-serif !important;
-    background: #ffffff !important;
-    color: #222 !important;
-}
-
-.block-container {
-    max-width: 1600px !important;
-    padding-top: 0.5rem !important;
-}
-
-/* ------------------------------------------------------------------ */
-/* FILTERS AREA                                                       */
-/* ------------------------------------------------------------------ */
-.jp-filters-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 0.4rem;
-}
-
-/* ------------------------------------------------------------------ */
-/* GRID                                                              */
-/* ------------------------------------------------------------------ */
-.jp-comparison-grid {
+/* GRID OF CARDS */
+.jp-grid {
     display: grid;
-    gap: 24px;
+    gap: 30px;
+    width: 100%;
 }
 
-/* ------------------------------------------------------------------ */
-/* CARDS                                                              */
-/* ------------------------------------------------------------------ */
+/* 1, 2 or 3 columns depending on selection */
+.cols-1 { grid-template-columns: 1fr; }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* CARD */
 .jp-card {
     background: #ffffff;
     border-radius: 18px;
     border: 1px solid #e5e5e5;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    height: 82vh;              /* FIXED HEIGHT – REQUIRED */
     display: flex;
     flex-direction: column;
-    overflow: hidden;          /* MUITO IMPORTANTE: texto não invade fora */
+    overflow: hidden;          /* prevents invading */
 }
 
-/* Header que fica colado dentro do card, nunca fora dele */
+/* STICKY HEADER INSIDE CARD */
 .jp-card-header {
-    position: sticky;
-    top: 0;
     background: #ffffff;
     padding: 20px 24px 16px 24px;
-    z-index: 2;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 3;
 }
 
-/* Títulos do card */
 .jp-title {
-    font-size: 1.35rem;
+    font-size: 22px;
     font-weight: 700;
     margin-bottom: 4px;
 }
 
 .jp-gg {
-    color: #145efc;
+    font-size: 18px;
     font-weight: 700;
+    color: #145efc;
     margin-bottom: 12px;
 }
 
-/* Bloco meta (Job Family, Sub Job Family etc.) */
-.jp-meta-block {
-    background: #f7f6f3;
+/* META */
+.jp-meta {
+    background: #f4f2ec;
+    padding: 12px 14px;
     border-radius: 12px;
-    padding: 10px 14px;
     font-size: 0.90rem;
 }
 
-/* Corpo do card – onde as descrições rolam junto com a página */
-.jp-card-body {
-    padding: 16px 24px 22px 24px;
-    font-size: 0.9rem;
-    line-height: 1.45;
+/* BODY THAT SCROLLS */
+.jp-body {
+    padding: 20px 24px 24px 24px;
+    overflow-y: auto;
+    flex: 1;
 }
 
-/* Seções dentro do corpo */
+/* SECTION */
 .jp-section {
-    padding: 10px 0 12px 0;
-    border-bottom: 1px solid #f3f3f3;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
 }
+
 .jp-section:last-child {
     border-bottom: none;
 }
 
 .jp-section-title {
+    font-size: 0.95rem;
     font-weight: 700;
-    font-size: 0.93rem;
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -157,40 +115,28 @@ html, body, [data-testid="stAppViewContainer"] {
 
 .jp-section-title img {
     width: 20px;
-    opacity: 0.9;
 }
 
 .jp-text {
+    font-size: 0.88rem;
+    line-height: 1.40;
     white-space: pre-wrap;
 }
 
-/* ------------------------------------------------------------------ */
-/* RESPONSIVIDADE                                                     */
-/* ------------------------------------------------------------------ */
-@media (max-width: 1100px) {
-    .jp-comparison-grid {
-        grid-template-columns: repeat(2, minmax(260px, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    .jp-comparison-grid {
-        grid-template-columns: repeat(1, minmax(260px, 1fr));
-    }
-}
 </style>
 """
-st.markdown(custom_css, unsafe_allow_html=True)
 
-# =============================================================================
-# LOAD JOB PROFILE
-# =============================================================================
+st.markdown(CSS, unsafe_allow_html=True)
+
+# -----------------------------------------------------------------------------
+# LOAD DATA
+# -----------------------------------------------------------------------------
 @st.cache_data(ttl=600)
-def load_job_profile() -> pd.DataFrame:
-    path = Path("data") / "Job Profile.xlsx"
-    if not path.exists():
+def load_job_profile():
+    p = Path("data") / "Job Profile.xlsx"
+    if not p.exists():
         return pd.DataFrame()
-    df = pd.read_excel(path)
+    df = pd.read_excel(p)
     df.columns = df.columns.str.strip()
     return df
 
@@ -199,93 +145,48 @@ if df.empty:
     st.error("Error loading Job Profile.xlsx")
     st.stop()
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # FILTERS
-# =============================================================================
+# -----------------------------------------------------------------------------
 st.subheader("🔍 Job Profile Description Explorer")
 
 families = sorted(df["Job Family"].dropna().unique())
 
-col1, col2, col3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-with col1:
-    family = st.selectbox(
-        "Job Family",
-        ["Select..."] + families,
-        index=0,
-    )
+with c1:
+    family = st.selectbox("Job Family", ["Select..."] + families)
 
-with col2:
-    if family != "Select...":
-        subs = sorted(
-            df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()
-        )
-    else:
-        subs = []
-    sub_family = st.selectbox(
-        "Sub Job Family",
-        ["Select..."] + subs,
-        index=0,
-    )
+with c2:
+    subs = sorted(df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()) if family != "Select..." else []
+    subfam = st.selectbox("Sub Job Family", ["Select..."] + subs)
 
-with col3:
-    if sub_family != "Select...":
-        paths = sorted(
-            df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique()
-        )
-    else:
-        paths = []
-    career_path = st.selectbox(
-        "Career Path",
-        ["Select..."] + paths,
-        index=0,
-    )
+with c3:
+    paths = sorted(df[df["Sub Job Family"] == subfam]["Career Path"].dropna().unique()) if subfam != "Select..." else []
+    path = st.selectbox("Career Path", ["Select..."] + paths)
 
-# Apply filters
 flt = df.copy()
-if family != "Select...":
-    flt = flt[flt["Job Family"] == family]
-if sub_family != "Select...":
-    flt = flt[flt["Sub Job Family"] == sub_family]
-if career_path != "Select...":
-    flt = flt[flt["Career Path"] == career_path]
+if family != "Select...": flt = flt[flt["Job Family"] == family]
+if subfam != "Select...": flt = flt[flt["Sub Job Family"] == subfam]
+if path != "Select...": flt = flt[flt["Career Path"] == path]
 
-# =============================================================================
-# PICKLIST
-# =============================================================================
 if flt.empty:
-    st.info("No profiles found with current filters.")
+    st.info("No profiles found.")
     st.stop()
 
-flt["label"] = flt.apply(
-    lambda r: f"GG {str(r.get('Global Grade', '')).replace('.0','')} • {r.get('Job Profile', '')}",
-    axis=1,
-)
+flt["label"] = flt.apply(lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}", axis=1)
+label_to_job = dict(zip(flt["label"], flt["Job Profile"]))
 
-label_to_profile = dict(zip(flt["label"], flt["Job Profile"]))
+selected = st.multiselect("Select up to 3 profiles to compare:", flt["label"].tolist(), max_selections=3)
 
-selected_labels = st.multiselect(
-    "Select up to 3 profiles to compare:",
-    options=list(label_to_profile.keys()),
-    max_selections=3,
-)
-
-if not selected_labels:
-    st.info("Select at least one profile.")
+if not selected:
     st.stop()
 
-selected_profiles = [label_to_profile[l] for l in selected_labels]
-rows = [
-    flt[flt["Job Profile"] == p].iloc[0].to_dict()
-    for p in selected_profiles
-]
+profiles = [flt[flt["Job Profile"] == label_to_job[x]].iloc[0].to_dict() for x in selected]
 
-num_cards = len(rows)
-grid_template = f"grid-template-columns: repeat({num_cards}, minmax(260px, 1fr));"
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# Icons for sections
+# -----------------------------------------------------------------------------
+# ICONS
+# -----------------------------------------------------------------------------
 icons = {
     "Sub Job Family Description": "Hierarchy.svg",
     "Job Profile Description": "File_Clipboard_Text.svg",
@@ -298,70 +199,75 @@ icons = {
     "Competencies 2": "Setting_Cog.svg",
     "Competencies 3": "Setting_Cog.svg",
 }
+sections = list(icons.keys())
 
-sections_order = list(icons.keys())
+# -----------------------------------------------------------------------------
+# RENDER HTML
+# -----------------------------------------------------------------------------
 
-# =============================================================================
-# BUILD HTML FOR CARDS
-# =============================================================================
-html_parts = [f'<div class="jp-comparison-grid" style="{grid_template}">']
+def render_cards(profiles):
+    n = len(profiles)
+    cls = f"cols-{n}"
 
-for card in rows:
-    job = html.escape(str(card.get("Job Profile", "")))
-    gg_raw = card.get("Global Grade", "")
-    gg = html.escape(str(gg_raw).replace(".0", ""))
-    jf = html.escape(str(card.get("Job Family", "")))
-    sf = html.escape(str(card.get("Sub Job Family", "")))
-    cp = html.escape(str(card.get("Career Path", "")))
-    fc = html.escape(str(card.get("Full Job Code", "")))
+    html_out = f'<div class="jp-grid {cls}">'
 
-    card_html = []
-    card_html.append('<div class="jp-card">')
+    for p in profiles:
+        job = html.escape(p.get("Job Profile", ""))
+        gg = html.escape(str(p.get("Global Grade", "")).replace(".0", ""))
+        jf = html.escape(p.get("Job Family", ""))
+        sf = html.escape(p.get("Sub Job Family", ""))
+        cp = html.escape(p.get("Career Path", ""))
+        fc = html.escape(p.get("Full Job Code", ""))
 
-    # HEADER (sticky inside card)
-    card_html.append('<div class="jp-card-header">')
-    card_html.append(f'<div class="jp-title">{job}</div>')
-    if gg:
-        card_html.append(f'<div class="jp-gg">GG {gg}</div>')
+        html_out += """
+        <div class="jp-card">
+            <div class="jp-card-header">
+                <div class="jp-title">{job}</div>
+                <div class="jp-gg">GG {gg}</div>
 
-    card_html.append('<div class="jp-meta-block">')
-    if jf:
-        card_html.append(f"<div><b>Job Family:</b> {jf}</div>")
-    if sf:
-        card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
-    if cp:
-        card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
-    if fc:
-        card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    card_html.append("</div>")  # meta-block
-    card_html.append("</div>")  # header
+                <div class="jp-meta">
+                    <div><b>Job Family:</b> {jf}</div>
+                    <div><b>Sub Job Family:</b> {sf}</div>
+                    <div><b>Career Path:</b> {cp}</div>
+                    <div><b>Full Job Code:</b> {fc}</div>
+                </div>
+            </div>
 
-    # BODY (scrolls with the page, text some inside card)
-    card_html.append('<div class="jp-card-body">')
+            <div class="jp-body">
+        """.format(job=job, gg=gg, jf=jf, sf=sf, cp=cp, fc=fc)
 
-    for sec in sections_order:
-        content_raw = card.get(sec, "")
-        content = "" if pd.isna(content_raw) else str(content_raw).strip()
-        if not content:
-            continue
+        for sec in sections:
+            val = p.get(sec, "")
+            if isinstance(val, float) and pd.isna(val):
+                continue
+            val = str(val).strip()
+            if not val:
+                continue
 
-        icon_file = icons[sec]
-        card_html.append('<div class="jp-section">')
-        card_html.append(
-            f'<div class="jp-section-title">'
-            f'<img src="assets/icons/sig/{icon_file}"> {html.escape(sec)}'
-            f'</div>'
-        )
-        card_html.append(
-            f'<div class="jp-text">{html.escape(content)}</div>'
-        )
-        card_html.append("</div>")  # section
+            sec_html = html.escape(sec)
+            val_html = html.escape(val)
+            icon = icons[sec]
 
-    card_html.append("</div>")  # body
-    card_html.append("</div>")  # card
+            html_out += f"""
+            <div class="jp-section">
+                <div class="jp-section-title">
+                    <img src="assets/icons/sig/{icon}">
+                    {sec_html}
+                </div>
+                <div class="jp-text">{val_html}</div>
+            </div>
+            """
 
-    html_parts.append("".join(card_html))
+        html_out += "</div></div>"  # close jp-body and jp-card
 
-html_parts.append("</div>")  # grid wrapper
+    html_out += "</div>"  # close grid
+    return html_out
 
-st.markdown("".join(html_parts), unsafe_allow_html=True)
+
+html_final = render_cards(profiles)
+
+# -----------------------------------------------------------------------------
+# RENDER
+# -----------------------------------------------------------------------------
+st.html(html_final, height=900)
+
