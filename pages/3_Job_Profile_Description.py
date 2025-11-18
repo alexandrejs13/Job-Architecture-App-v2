@@ -1,5 +1,5 @@
 # pages/3_Job_Profile_Description.py
-# FINAL VERSION – FULL HTML LAYOUT WITH ONE components.html()
+# FINAL – ONE SINGLE PAGE SCROLL (NO INTERNAL SCROLL)
 
 import streamlit as st
 import pandas as pd
@@ -95,7 +95,7 @@ icons = {
 sections = list(icons.keys())
 
 # ---------------------------------------------
-# BUILD HTML
+# BUILD HTML (WITHOUT INTERNAL SCROLL)
 # ---------------------------------------------
 def build_html(profiles):
 
@@ -114,7 +114,7 @@ def build_html(profiles):
         background: #ffffff;
     }}
 
-    /* GRID OF CARDS */
+    /* GRID */
     .grid {{
         display: grid;
         gap: 24px;
@@ -130,13 +130,12 @@ def build_html(profiles):
         border: 1px solid #e4e4e4;
         border-radius: 16px;
         box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-        height: 80vh;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow: visible; 
     }}
 
-    /* STICKY HEADER */
+    /* HEADER STICKY */
     .header {{
         background: #fff;
         padding: 22px;
@@ -166,11 +165,10 @@ def build_html(profiles):
         font-size: 0.9rem;
     }}
 
-    /* BODY WITH SCROLL */
+    /* BODY (NO INTERNAL SCROLL) */
     .body {{
         padding: 22px;
-        overflow-y: auto;
-        flex: 1;
+        overflow: visible; 
     }}
 
     .section {{
@@ -263,7 +261,8 @@ def build_html(profiles):
 
 
 # ---------------------------------------------
-# RENDER HTML AS ONE BLOCK
+# RENDER FINAL LAYOUT (PAGE SCROLL ONLY)
 # ---------------------------------------------
 html_final = build_html(profiles)
-components.html(html_final, height=950, scrolling=True)
+
+components.html(html_final, height=2000, scrolling=True)
