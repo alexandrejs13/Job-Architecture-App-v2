@@ -17,18 +17,30 @@ def load_icon_png(path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 # ==========================================================
-# HEADER — padrão SIG (igual todas as páginas)
+# HEADER — CENTRALIZADO
 # ==========================================================
 icon_path = "assets/icons/governance.png"
 icon_b64 = load_icon_png(icon_path)
 
-st.markdown(f"""
-<div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
-    <img src="data:image/png;base64,{icon_b64}" style="width:56px; height:56px;">
-    <h1 style="font-size:36px; font-weight:700; margin:0; padding:0;">
+html_home = """
+<div style='
+    min-height:70vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+'>
+    <img src='data:image/png;base64:{icon}' style='width:200px; height:200px; margin-bottom:25px;'>
+    <h1 style='
+        font-size:46px;
+        font-weight:700;
+        margin:0;
+        padding:0;
+        text-align:center;
+    '>
         Job Architecture
     </h1>
 </div>
+"""
 
-<hr style="margin-top:14px; margin-bottom:26px;">
-""", unsafe_allow_html=True)
+st.markdown(html_home.format(icon=icon_b64), unsafe_allow_html=True)
