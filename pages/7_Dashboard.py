@@ -1,5 +1,5 @@
 # ==========================================================
-# DASHBOARD — VERSÃO FINAL SEM CAREER BAND (Página 7)
+# DASHBOARD — VERSÃO MINIMALISTA, MODERNA E ELEGANTE (SIG)
 # ==========================================================
 
 import streamlit as st
@@ -42,25 +42,23 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ==========================================================
-# CORES SIG
+# CORES SIG (minimalistas)
 # ==========================================================
 SIG_COLORS = [
-    "#145efc",  # Sky
-    "#dca0ff",  # Spark lilac
-    "#000000",  # Black
-    "#167865",  # Forest 2
-    "#f5f073",  # Moss 1
+    "#145efc",
+    "#dca0ff",
+    "#000000",
+    "#167865",
+    "#f5f073",
 ]
+
 
 # ==========================================================
 # IMPORTAÇÃO DO ARQUIVO
 # ==========================================================
 df = pd.read_excel("data/Job Profile.xlsx")
-
-# Normaliza nomes de colunas
 df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
 
-# Mapeamento fixo
 COL_FAMILY = "job_family"
 COL_SUBFAMILY = "sub_job_family"
 COL_PROFILE = "job_profile"
@@ -69,13 +67,13 @@ COL_CAREER_PATH = "career_path"
 
 
 # ==========================================================
-# FUNÇÕES DE GRÁFICOS SIG
+# FUNÇÕES DE GRÁFICOS MINIMALISTAS
 # ==========================================================
 
 def sig_donut(df, category, value):
     return (
         alt.Chart(df)
-        .mark_arc(innerRadius=70)
+        .mark_arc(innerRadius=90, stroke="#FFFFFF", strokeWidth=1)
         .encode(
             theta=alt.Theta(f"{value}:Q"),
             color=alt.Color(
@@ -91,7 +89,7 @@ def sig_donut(df, category, value):
 def sig_bar(df, category, value):
     return (
         alt.Chart(df)
-        .mark_bar(size=28)
+        .mark_bar(size=22, cornerRadiusTopLeft=4, cornerRadiusBottomLeft=4)
         .encode(
             x=alt.X(f"{value}:Q", title=""),
             y=alt.Y(category, sort='-x', title=""),
@@ -106,17 +104,29 @@ def sig_bar(df, category, value):
 
 
 def sig_legend(df, category, value):
-    st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
     for i, row in df.iterrows():
         st.markdown(
             f"""
-            <div style="display:flex; justify-content:space-between;
-                        padding:6px 10px; margin-bottom:6px;
-                        background:#f5f5f5; border-radius:8px;">
-                <div style="font-size:15px; font-weight:500;">{row[category]}</div>
-                <div style="background:{SIG_COLORS[i % len(SIG_COLORS)]};
-                            padding:4px 10px; border-radius:12px;
-                            color:white; font-weight:600;">
+            <div style="
+                display:flex; 
+                justify-content:space-between;
+                align-items:center;
+                padding:6px 10px;
+                margin-bottom:6px;
+                background:#FAFAFA;
+                border:1px solid #E6E6E6;
+                border-radius:6px;
+            ">
+                <div style="font-size:14px; color:#333;">{row[category]}</div>
+                <div style="
+                    background:{SIG_COLORS[i % len(SIG_COLORS)]};
+                    padding:3px 10px;
+                    border-radius:10px;
+                    color:white;
+                    font-weight:600;
+                    font-size:12px;
+                ">
                     {row[value]}
                 </div>
             </div>
@@ -132,38 +142,58 @@ tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
 
 
 # ==========================================================
-# TAB 1 — OVERVIEW
+# TAB 1 — OVERVIEW (EDITORIAL SIG)
 # ==========================================================
 with tab1:
 
     st.markdown("## Overview")
 
-    # ------------ CARDS -------------
-    kpis = {
+    # ======================================================
+    # CARDS — 2 LINHAS (ELEGANTES)
+    # ======================================================
+    kpis_line1 = {
         "Families": df[COL_FAMILY].nunique(),
         "Subfamilies": df[COL_SUBFAMILY].nunique(),
         "Job Profiles": df[COL_PROFILE].nunique(),
-        "Career Paths": df[COL_CAREER_PATH].nunique(),
         "Global Grades": df[COL_GRADE].nunique(),
+    }
+
+    kpis_line2 = {
+        "Career Paths": df[COL_CAREER_PATH].nunique(),
         "Avg Profiles / Family": round(df[COL_PROFILE].nunique() / df[COL_FAMILY].nunique(), 1),
         "Avg Profiles / Subfamily": round(df[COL_PROFILE].nunique() / df[COL_SUBFAMILY].nunique(), 1),
     }
 
+    # ---- Linha 1 ----
     st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
-    for title, value in kpis.items():
+    for title, value in kpis_line1.items():
         st.markdown(
             f"""
-            <div class='sig-card'>
+            <div class='sig-card-minimal'>
                 <div class='sig-card-title'>{title}</div>
                 <div class='sig-card-value'>{value}</div>
             </div>
             """,
-            unsafe_allow_html=True
-        )
+            unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 
+    # ---- Linha 2 ----
+    st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
+    for title, value in kpis_line2.items():
+        st.markdown(
+            f"""
+            <div class='sig-card-minimal'>
+                <div class='sig-card-title'>{title}</div>
+                <div class='sig-card-value'>{value}</div>
+            </div>
+            """,
+            unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Separador
+    st.markdown("<hr style='border:0.5px solid #E6E6E6; margin:36px 0;'>", unsafe_allow_html=True)
 
 
     # ======================================================
@@ -178,7 +208,7 @@ with tab1:
         .sort_values("Count", ascending=False)
     )
 
-    colA, colB = st.columns([1, 1])
+    colA, colB = st.columns([1.2, 0.8])
 
     with colA:
         st.altair_chart(sig_donut(df_sub, COL_FAMILY, "Count"),
@@ -187,12 +217,12 @@ with tab1:
     with colB:
         sig_legend(df_sub, COL_FAMILY, "Count")
 
+    st.markdown("<hr style='border:0.5px solid #E6E6E6; margin:36px 0;'>", unsafe_allow_html=True)
 
 
     # ======================================================
     # BAR — Profiles per Subfamily
     # ======================================================
-    st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("### Profiles per Subfamily")
 
     df_prof = (
@@ -202,7 +232,7 @@ with tab1:
         .sort_values("Count", ascending=False)
     )
 
-    colL, colR = st.columns([1.2, 1])
+    colL, colR = st.columns([1.2, 0.8])
 
     with colL:
         st.altair_chart(sig_bar(df_prof, COL_SUBFAMILY, "Count"),
@@ -214,7 +244,7 @@ with tab1:
 
 
 # ==========================================================
-# TAB 2 — FAMILY MICRO-ANALYSIS
+# TAB 2 — FAMILY MICRO-ANALYSIS (EDITORIAL SIG)
 # ==========================================================
 with tab2:
 
@@ -225,30 +255,49 @@ with tab2:
 
     df_sel = df[df[COL_FAMILY] == selected]
 
-    kpis_family = {
+    # ---- Cards ----
+    kpis_family_line1 = {
         "Subfamilies": df_sel[COL_SUBFAMILY].nunique(),
         "Job Profiles": df_sel[COL_PROFILE].nunique(),
-        "Career Paths": df_sel[COL_CAREER_PATH].nunique(),
         "Global Grades": df_sel[COL_GRADE].nunique(),
-        "Career Levels": df_sel[COL_GRADE].nunique(),  # ajuste
     }
 
+    kpis_family_line2 = {
+        "Career Paths": df_sel[COL_CAREER_PATH].nunique(),
+    }
+
+    # Linha 1
     st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
-    for title, value in kpis_family.items():
+    for title, value in kpis_family_line1.items():
         st.markdown(
             f"""
-            <div class='sig-card'>
+            <div class='sig-card-minimal'>
                 <div class='sig-card-title'>{title}</div>
                 <div class='sig-card-value'>{value}</div>
             </div>
             """,
-            unsafe_allow_html=True
-        )
+            unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 
-    # ----- Gráfico Profiles per Subfamily -----
+    # Linha 2
+    st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
+    for title, value in kpis_family_line2.items():
+        st.markdown(
+            f"""
+            <div class='sig-card-minimal'>
+                <div class='sig-card-title'>{title}</div>
+                <div class='sig-card-value'>{value}</div>
+            </div>
+            """,
+            unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<hr style='border:0.5px solid #E6E6E6; margin:36px 0;'>", unsafe_allow_html=True)
+
+
+    # ---- Gráfico minimalista ----
     st.markdown("### Profiles per Subfamily (Selected Family)")
 
     df_sel_prof = (
