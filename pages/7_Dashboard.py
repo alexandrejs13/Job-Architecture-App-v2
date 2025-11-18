@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-import base64, os
 import altair as alt
+import base64, os
 
 # ==========================================================
 # PAGE CONFIG
@@ -9,24 +9,111 @@ import altair as alt
 st.set_page_config(page_title="Dashboard", layout="wide")
 
 # ==========================================================
-# ICON LOADING
+# LOAD FONT (PP SIG FLOW)
 # ==========================================================
-def load_icon_png(path):
-    if not os.path.exists(path):
-        return ""
+def load_font_base64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
+font_regular = load_font_base64("assets/fonts/PP-SIG-Flow-Regular.ttf")
+font_semibold = load_font_base64("assets/fonts/PP-SIG-Flow-Semibold.ttf")
+
 # ==========================================================
-# HEADER SIG
+# GLOBAL CSS (APLICA TIPOGRAFIA + GRID REAL)
 # ==========================================================
+st.markdown(f"""
+<style>
+
+@font-face {{
+    font-family: 'SIGFlow';
+    src: url(data:font/ttf;base64,{font_regular}) format('truetype');
+    font-weight: 400;
+}}
+
+@font-face {{
+    font-family: 'SIGFlow';
+    src: url(data:font/ttf;base64,{font_semibold}) format('truetype');
+    font-weight: 600;
+}}
+
+*, body {{
+    font-family: 'SIGFlow', sans-serif !important;
+}}
+
+section.main > div {{
+    max-width: 1180px;
+}}
+
+.kpi-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 32px;
+}}
+
+.kpi-box {{
+    background: #F2EFEB;
+    border: 1px solid #E5E0D8;
+    border-radius: 14px;
+    padding: 14px 18px;
+    height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}}
+
+.kpi-title {{
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+}}
+
+.kpi-value {{
+    font-size: 26px;
+    font-weight: 600;
+    color: #145EFC;
+    margin-top: 4px;
+}}
+
+.legend-item {{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+}}
+
+.legend-dot {{
+    width:12px;
+    height:12px;
+    border-radius:50%;
+}}
+
+.legend-badge {{
+    margin-left:auto;
+    background:#145EFC;
+    color:white;
+    padding:2px 12px;
+    border-radius:12px;
+    font-weight:600;
+}}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================================
+# HEADER
+# ==========================================================
+def load_icon_png(path):
+    if not os.path.exists(path): return ""
+    with open(path,"rb") as f: return base64.b64encode(f.read()).decode("utf-8")
+
 icon_path = "assets/icons/data_2_perfromance.png"
 icon_b64 = load_icon_png(icon_path)
 
 st.markdown(f"""
 <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
     <img src="data:image/png;base64,{icon_b64}" style="width:56px; height:56px;">
-    <h1 style="font-size:36px; font-weight:700; margin:0; padding:0;">
+    <h1 style="font-size:36px; font-weight:600; margin:0; padding:0;">
         Dashboard
     </h1>
 </div>
@@ -37,93 +124,24 @@ st.markdown(f"""
 # LOAD DATA
 # ==========================================================
 @st.cache_data
-def load_job_profile():
+def load_data():
     return pd.read_excel("data/Job Profile.xlsx")
 
-df = load_job_profile()
+df = load_data()
 
 COL_FAMILY = "Job Family"
 COL_SUBFAMILY = "Sub Job Family"
 COL_PROFILE = "Job Profile"
 COL_CAREER_PATH = "Career Path"
-COL_BAND = "Career Band Short"
 COL_GRADE = "Global Grade"
-COL_LEVEL = "Career Level"
 
 # ==========================================================
-# CSS — Cards horizontais pequenos
-# ==========================================================
-st.markdown("""
-<style>
-
-section.main > div {
-    max-width: 1180px;
-}
-
-.kpi-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    margin-bottom: 28px;
-}
-
-.kpi-box {
-    background: #F2EFEB;
-    border: 1px solid #E5E0D8;
-    border-radius: 14px;
-    padding: 12px 16px;
-    width: 200px;
-    height: 88px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.kpi-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: black;
-}
-
-.kpi-value {
-    font-size: 24px;
-    font-weight: 800;
-    color: #145EFC;
-}
-
-/* legenda premium */
-.legend-item {
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom:8px;
-}
-
-.legend-dot {
-    width:12px;
-    height:12px;
-    border-radius:50%;
-}
-
-.legend-badge {
-    margin-left:auto;
-    background:#145EFC;
-    color:white;
-    padding:2px 12px;
-    border-radius:12px;
-    font-weight:700;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# ==========================================================
-# ABAS
+# TABS
 # ==========================================================
 tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
 
 # ==========================================================
-# TAB 1 — OVERVIEW
+# TAB 1
 # ==========================================================
 with tab1:
 
@@ -134,26 +152,26 @@ with tab1:
         "Subfamilies": df[COL_SUBFAMILY].nunique(),
         "Job Profiles": df[COL_PROFILE].nunique(),
         "Global Grades": df[COL_GRADE].nunique(),
-        "Career Paths": df[COL_CAREER_PATH].nunique()
+        "Career Paths": df[COL_CAREER_PATH].nunique(),
     }
 
-    # CARDS
-    st.markdown("<div class='kpi-row'>", unsafe_allow_html=True)
-    for title, value in kpis.items():
+    # CARDS — HORIZONTAIS DE VERDADE
+    st.markdown("<div class='kpi-grid'>", unsafe_allow_html=True)
+    for t, v in kpis.items():
         st.markdown(
             f"""
             <div class='kpi-box'>
-                <div class='kpi-title'>{title}</div>
-                <div class='kpi-value'>{value}</div>
+                <div class='kpi-title'>{t}</div>
+                <div class='kpi-value'>{v}</div>
             </div>
             """,
             unsafe_allow_html=True
         )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ======================================================
-    # DONUT — Subfamilies per Family
-    # ======================================================
+    # ------------------------------------------------------
+    # DONUT
+    # ------------------------------------------------------
     st.markdown("## Subfamilies per Family")
 
     subf = (
@@ -164,13 +182,13 @@ with tab1:
     )
 
     SIG_COLORS = [
-        "#145EFC", "#dca0ff", "#167665", "#f5f073", "#73706d",
-        "#bfba b5", "#e5dfd9", "#4fa593"
+        "#145EFC", "#dca0ff", "#167665", "#f5f073", 
+        "#73706d", "#bfba b5", "#e5dfd9", "#4fa593"
     ]
 
     subf["Color"] = [SIG_COLORS[i % len(SIG_COLORS)] for i in range(len(subf))]
 
-    c1, c2 = st.columns([1.2, 1])
+    c1, c2 = st.columns([1.2,1])
 
     with c1:
         donut = (
@@ -197,12 +215,12 @@ with tab1:
                 unsafe_allow_html=True
             )
 
-    # ======================================================
-    # BARRAS — Profiles per Subfamily (TOTAL)
-    # ======================================================
+    # ------------------------------------------------------
+    # BARRAS — ESPAÇADAS, ALTURA PREMIUM
+    # ------------------------------------------------------
     st.markdown("## Profiles per Subfamily (Total)")
 
-    profiles_sub = (
+    bars_df = (
         df.groupby(COL_SUBFAMILY)[COL_PROFILE]
         .nunique()
         .reset_index(name="Count")
@@ -210,30 +228,29 @@ with tab1:
     )
 
     bars = (
-        alt.Chart(profiles_sub)
+        alt.Chart(bars_df)
         .mark_bar(size=32)
         .encode(
             x="Count:Q",
             y=alt.Y(f"{COL_SUBFAMILY}:N", sort='-x'),
-            color=alt.value("#145EFC"),
-            tooltip=[COL_SUBFAMILY, "Count"]
+            color=alt.value("#145EFC")
         )
-    ).properties(height=34 * len(profiles_sub))
+        .properties(height=36 * len(bars_df))
+    )
 
     st.altair_chart(bars, use_container_width=True)
 
-
 # ==========================================================
-# TAB 2 — FAMILY MICRO-ANALYSIS
+# TAB 2
 # ==========================================================
 with tab2:
 
     st.markdown("## Family Micro-Analysis")
 
-    families = sorted(df[COL_FAMILY].unique())
-    selected = st.selectbox("Select Family:", families)
+    fams = sorted(df[COL_FAMILY].unique())
+    sel = st.selectbox("Select Family:", fams)
 
-    fam_df = df[df[COL_FAMILY] == selected]
+    fam_df = df[df[COL_FAMILY] == sel]
 
     metrics = {
         "Subfamilies": fam_df[COL_SUBFAMILY].nunique(),
@@ -242,61 +259,20 @@ with tab2:
         "Career Paths": fam_df[COL_CAREER_PATH].nunique(),
     }
 
-    # CARDS
-    st.markdown("<div class='kpi-row'>", unsafe_allow_html=True)
-    for title, value in metrics.items():
+    st.markdown("<div class='kpi-grid'>", unsafe_allow_html=True)
+    for t, v in metrics.items():
         st.markdown(
             f"""
             <div class='kpi-box'>
-                <div class='kpi-title'>{title}</div>
-                <div class='kpi-value'>{value}</div>
+                <div class='kpi-title'>{t}</div>
+                <div class='kpi-value'>{v}</div>
             </div>
             """,
             unsafe_allow_html=True
         )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # DONUT por subfamily
-    st.markdown("## Profiles per Subfamily (Inside Family)")
-
-    sublocal = (
-        fam_df.groupby(COL_SUBFAMILY)[COL_PROFILE]
-        .nunique()
-        .reset_index(name="Count")
-        .sort_values("Count", ascending=False)
-    )
-    sublocal["Color"] = [SIG_COLORS[i % len(SIG_COLORS)] for i in range(len(sublocal))]
-
-    s1, s2 = st.columns([1.2, 1])
-
-    with s1:
-        donut2 = (
-            alt.Chart(sublocal)
-            .mark_arc(innerRadius=60)
-            .encode(
-                theta="Count",
-                color=alt.Color("Color:N", scale=None),
-                tooltip=[COL_SUBFAMILY, "Count"]
-            )
-        )
-        st.altair_chart(donut2, use_container_width=True)
-
-    with s2:
-        for _, row in sublocal.iterrows():
-            st.markdown(
-                f"""
-                <div class='legend-item'>
-                    <div class='legend-dot' style='background:{row["Color"]};'></div>
-                    <div style="font-weight:600;">{row[COL_SUBFAMILY]}</div>
-                    <div class='legend-badge'>{row["Count"]}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-    # TABELA
-    st.markdown("## Full Job Profile Listing")
     st.dataframe(
-        fam_df[[COL_SUBFAMILY, COL_PROFILE, COL_CAREER_PATH, COL_BAND, COL_LEVEL, COL_GRADE]],
+        fam_df[[COL_SUBFAMILY, COL_PROFILE, COL_CAREER_PATH, COL_GRADE]],
         use_container_width=True
     )
