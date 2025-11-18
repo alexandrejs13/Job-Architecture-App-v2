@@ -3,3 +3,4 @@ plotly
 scikit-learn
 openpyxl
 numpy
+streamlit
