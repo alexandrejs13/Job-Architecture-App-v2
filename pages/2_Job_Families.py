@@ -35,6 +35,39 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================================
+# GLOBAL LAYOUT — limita largura e impede esticar infinito
+# ==========================================================
+st.markdown("""
+<style>
+
+    /* Container principal do Streamlit */
+    .main > div {
+        max-width: 1400px;    /* limite máximo elegante */
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* Estilo para dataframes */
+    .stDataFrame {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Estilo para cards / container padrão */
+    .block-container, .stColumn {
+        max-width: 1400px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ==========================================================
 # CONTAINER CENTRAL PARA EVITAR PÁGINA INFINITA
 # ==========================================================
 container_style = """
