@@ -11,39 +11,39 @@ import os
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ---------------------------------------------------------
-# LOAD INLINE IMAGE (PAGE ICON)
+# LOAD PAGE ICON (PNG) -> INLINE BASE64
 # ---------------------------------------------------------
-def load_png_base64(path):
+def load_page_icon():
+    path = "assets/icons/business_review_clipboard.png"
     if not os.path.exists(path):
         return ""
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-page_icon_b64 = load_png_base64("assets/icons/business_review_clipboard.png")
+page_icon_b64 = load_page_icon()
 
 # ---------------------------------------------------------
-# HEADER
+# HEADER (ÍCONE GRANDE + ALINHAMENTO PERFEITO)
 # ---------------------------------------------------------
 st.markdown(f"""
-<div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
-    <img src="data:image/png;base64,{page_icon_b64}" style="width:34px; height:34px;">
-    <h1 style="font-size:36px; font-weight:700; margin:0;">
+<div style="display:flex; align-items:center; gap:16px; margin-bottom:6px;">
+    <img src="data:image/png;base64,{page_icon_b64}" style="width:42px; height:42px; margin-top:2px;">
+    <h1 style="font-size:36px; font-weight:700; margin:0; padding:0;">
         Job Profile Description
     </h1>
 </div>
-<hr style="margin-top:4px;">
+
+<hr style="margin-top:8px; margin-bottom:0;">
 """, unsafe_allow_html=True)
 
-
 # ---------------------------------------------------------
-# LOAD DATA
+# LOAD EXCEL
 # ---------------------------------------------------------
 @st.cache_data
 def load_profiles():
     return pd.read_excel("data/Job Profile.xlsx")
 
 df = load_profiles()
-
 
 # ---------------------------------------------------------
 # INLINE SVG LOADER
@@ -55,7 +55,7 @@ def load_svg(svg_name):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-
+# MAP FINAL
 icons_svg = {
     "Sub Job Family Description": load_svg("Hierarchy.svg"),
     "Job Profile Description": load_svg("Content_Book_Phone.svg"),
@@ -74,7 +74,7 @@ icons_svg = {
 # ---------------------------------------------------------
 st.subheader("🔍 Job Profile Description Explorer")
 
-c1, c2, c3 = st.columns(3)
+c1, c2, c3 = st.columns([1, 1, 1])
 
 with c1:
     job_family = st.selectbox("Job Family",
@@ -117,7 +117,6 @@ if not selected:
 
 profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
 
-
 # ---------------------------------------------------------
 # SECTION ORDER
 # ---------------------------------------------------------
@@ -134,9 +133,8 @@ sections = [
     "Competencies 3",
 ]
 
-
 # ---------------------------------------------------------
-# BUILD HTML FINAL (ÉPICO)
+# BUILD HTML FINAL
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -164,35 +162,32 @@ html, body {{
     overflow: hidden;
 }}
 
-/* 🔥 TOPO SEM PADDING LATERAL */
+/* --------------------------
+   TOP GRID – SAND1 CARDS
+--------------------------- */
 #top-area {{
     background: white;
-    padding: 16px 0;
+    padding: 18px 24px;
     flex-shrink: 0;
-    position: sticky;
-    top: 0;
-    z-index: 20;
 }}
 
 .grid-top {{
     display: grid;
     grid-template-columns: repeat({n}, 1fr);
-    gap: 28px;
+    gap: 26px;
 }}
 
-/* 🔄 CARD GRANDE → FUNDO SAND1, SEM SOMBRA */
 .card-top {{
-    background: #f5f3ee;
+    background: #f5f3ee;        /* SAND1 */
     border-radius: 16px;
-    padding: 22px 26px;
-    box-shadow: none;
-    border: 1px solid #e3e1dd;
+    padding: 24px 26px;
+    box-shadow: none;           /* sem sombra */
 }}
 
 .title {{
     font-size: 20px;
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.28;
 }}
 
 .gg {{
@@ -202,22 +197,23 @@ html, body {{
     margin-top: 6px;
 }}
 
-/* 🔄 BLOCO DE META → FUNDO BRANCO + SOMBRA */
 .meta {{
-    background: white;
+    background: white;     /* AGORA O BLOCO MENOR É BRANCO */
     padding: 14px;
     border-radius: 12px;
     margin-top: 14px;
-    border: 1px solid #e5e2dc;
+    border: 1px solid #e6e4df;
     box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     font-size: 14px;
 }}
 
-/* 🔥 ÁREA ROLÁVEL OCUPANDO TODA A LARGURA */
+/* --------------------------
+   SCROLL AREA
+--------------------------- */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
-    padding: 28px 0;
+    padding: 28px 24px 40px 24px;
 }}
 
 .grid-desc {{
@@ -226,18 +222,18 @@ html, body {{
     gap: 28px;
 }}
 
-/* 🔥 SEÇÕES ALINHADAS */
 .row {{
     display: contents;
 }}
 
 .section-box {{
-    padding-bottom: 26px;
+    padding-bottom: 32px;
 }}
 
 .section-title {{
     font-size: 16px;
     font-weight: 700;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -245,7 +241,7 @@ html, body {{
 
 .section-line {{
     height: 1px;
-    background: #e8e6e1;
+    background: #e7e5e0;
     width: 100%;
     margin: 6px 0 14px 0;
 }}
@@ -268,11 +264,12 @@ html, body {{
 
 <div id="viewport">
 
+    <!-- TOP CARDS -->
     <div id="top-area">
         <div class="grid-top">
     """
 
-    # TOP CARDS
+    # ---------- TOP CARDS ----------
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -298,11 +295,12 @@ html, body {{
         </div>
     </div>
 
+    <!-- BODY -->
     <div id="scroll-area">
         <div class="grid-desc">
     """
 
-    # SEÇÕES ALINHADAS
+    # ---------- CONTENT ----------
     for sec in sections:
 
         html_code += "<div class='row'>"
