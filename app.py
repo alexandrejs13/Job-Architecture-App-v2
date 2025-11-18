@@ -91,23 +91,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-# ------------------------------------------------------------
-# LINK PARA A PÁGINA 1
-# ------------------------------------------------------------
-st.markdown(
-    """
-    <a href="/1_Job_Architecture" style="
-        font-size:20px;
-        color:#145efc;
-        text-decoration:none;
-        font-weight:600;
-    ">
-        Job Architecture →
-    </a>
-    """,
-    unsafe_allow_html=True
-)
-
-# Fecha os containers HTML abertos
-st.markdown("</div></div>", unsafe_allow_html=True)
