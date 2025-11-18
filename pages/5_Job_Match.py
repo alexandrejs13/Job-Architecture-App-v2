@@ -1,7 +1,17 @@
+import streamlit as st
+
+# ==========================================================
+# CONFIGURAÇÃO DA PÁGINA — precisa ser A PRIMEIRA COISA
+# ==========================================================
+st.set_page_config(
+    page_title="Job Match",
+    page_icon="assets/icons/checkmark_success.png",   # mesmo ícone do header
+    layout="wide"
+)
+
 # ==========================================================
 # HEADER — padrão SIG (56px, alinhado, elegante)
 # ==========================================================
-import streamlit as st
 import base64
 import os
 
