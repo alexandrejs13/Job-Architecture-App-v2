@@ -59,39 +59,6 @@ section.main > div {{
     margin-right: auto;
 }}
 
-.kpi-row {{
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 26px;
-}}
-
-.kpi-card {{
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 14px 18px;
-    border: 1px solid #e4e4e4;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    width: 210px;
-    height: 90px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}}
-
-.kpi-label {{
-    font-size: 13px;
-    font-weight: 600;
-    color: #727272;
-}}
-
-.kpi-number {{
-    font-size: 26px;
-    font-weight: 700;
-    margin-top: 4px;
-    color: #145efc;
-}}
-
 .sig-divider {{
     border: none;
     border-bottom: 1px solid #e2e2e2;
@@ -158,9 +125,7 @@ with tab1:
 
     st.markdown("## Executive Job Architecture Overview")
 
-    # --------------------- KPIs --------------------------
-    st.markdown("<div class='kpi-row'>", unsafe_allow_html=True)
-
+    # ========== KPIs HORIZONTAIS REAL OFICIAL ==========
     kpis = {
         "Job Families": df[COL_FAMILY].nunique(),
         "Subfamilies": df[COL_SUBFAMILY].nunique(),
@@ -169,20 +134,33 @@ with tab1:
         "Global Grades": df[COL_GRADE].nunique(),
     }
 
-    for label, number in kpis.items():
-        st.markdown(
-            f"""
-            <div class="kpi-card">
-                <div class="kpi-label">{label}</div>
-                <div class="kpi-number">{number}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    cols = st.columns(len(kpis))
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    for col, (label, number) in zip(cols, kpis.items()):
+        col.markdown(f"""
+            <div style="
+                background:#ffffff;
+                border-radius:12px;
+                padding:14px 18px;
+                border:1px solid #e4e4e4;
+                box-shadow:0 2px 8px rgba(0,0,0,0.04);
+                height:90px;
+                display:flex;
+                flex-direction:column;
+                justify-content:center;
+            ">
+                <div style="font-size:13px; font-weight:600; color:#727272;">
+                    {label}
+                </div>
+                <div style="font-size:26px; font-weight:700; margin-top:4px; color:#145efc;">
+                    {number}
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("<hr class='sig-divider'>", unsafe_allow_html=True)
 
+    
     # --------------------- Grade Distribution --------------------------
     st.markdown("### Grade Distribution (Structure Complexity)")
 
@@ -199,7 +177,8 @@ with tab1:
         .encode(
             x="Count:Q",
             y=alt.Y(f"{COL_GRADE}:N", sort='-x'),
-            color=alt.value("#145efc")
+            color=alt.value("#145efc"),
+            tooltip=[COL_GRADE, "Count"]
         )
         .properties(height=40 * len(grade_df))
     )
@@ -228,31 +207,38 @@ with tab2:
         (df[COL_SUBFAMILY] == selected_subfamily)
     ]
 
-    # --------------------- KPIs --------------------------
-    st.markdown("<div class='kpi-row'>", unsafe_allow_html=True)
+    # ========== KPIs HORIZONTAIS (SUBFAMILY) ==========
+    sub_kpis = {
+        "Profiles": sub_df[COL_PROFILE].nunique(),
+        "Grades": sub_df[COL_GRADE].nunique(),
+    }
 
-    st.markdown(
-        f"""
-        <div class="kpi-card">
-            <div class="kpi-label">Profiles</div>
-            <div class="kpi-number">{sub_df[COL_PROFILE].nunique()}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    cols = st.columns(len(sub_kpis))
 
-    st.markdown(
-        f"""
-        <div class="kpi-card">
-            <div class="kpi-label">Grades</div>
-            <div class="kpi-number">{sub_df[COL_GRADE].nunique()}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    for col, (label, number) in zip(cols, sub_kpis.items()):
+        col.markdown(f"""
+            <div style="
+                background:#ffffff;
+                border-radius:12px;
+                padding:14px 18px;
+                border:1px solid #e4e4e4;
+                box-shadow:0 2px 8px rgba(0,0,0,0.04);
+                height:90px;
+                display:flex;
+                flex-direction:column;
+                justify-content:center;
+            ">
+                <div style="font-size:13px; font-weight:600; color:#727272;">
+                    {label}
+                </div>
+                <div style="font-size:26px; font-weight:700; margin-top:4px; color:#145efc;">
+                    {number}
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<hr class='sig-divider'>", unsafe_allow_html=True)
+
 
     # --------------------- Grade Spread --------------------------
     st.markdown("### Grade Spread")
