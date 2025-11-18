@@ -1,3 +1,30 @@
+import streamlit as st
+import base64
+import os
+
+# ==========================================================
+# CONFIG
+# ==========================================================
+st.set_page_config(page_title="Job Architecture", layout="wide")
+
+# ==========================================================
+# FUNÇÃO PARA CARREGAR PNG INLINE
+# ==========================================================
+def load_icon_png(path):
+    if not os.path.exists(path):
+        return ""
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+# ==========================================================
+# ICON PATH
+# ==========================================================
+icon_path = "assets/icons/governance.png"
+icon_b64 = load_icon_png(icon_path)
+
+# ==========================================================
+# HOME SCREEN — ÍCONE GIGANTE + SIG FLOW + SUBTÍTULO
+# ==========================================================
 st.markdown(f"""
 <style>
 @font-face {{
