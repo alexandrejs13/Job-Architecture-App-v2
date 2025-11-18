@@ -28,7 +28,7 @@ def load_profiles():
 df = load_profiles()
 
 # ---------------------------------------------------------
-# TOP FILTERS
+# FILTERS
 # ---------------------------------------------------------
 st.subheader("🔍 Job Profile Description Explorer")
 
@@ -76,7 +76,7 @@ if not selected:
 profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
 
 # ---------------------------------------------------------
-# SECTIONS CONFIG
+# SECTIONS
 # ---------------------------------------------------------
 sections = [
     "Sub Job Family Description",
@@ -105,7 +105,7 @@ icons = {
 }
 
 # ---------------------------------------------------------
-# BUILD HTML FINAL
+# HTML FINAL — versão com colunas alinhadas por linha
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -133,18 +133,14 @@ html, body {{
     overflow: hidden;
 }}
 
-/* 🔥 CABEÇALHO FIXO SEM SOMBRA */
+/* HEADER SUPERIOR */
 #top-area {{
     background: white;
     padding: 12px 18px;
-    flex-shrink: 0;
     position: sticky;
     top: 0;
     z-index: 20;
-
-    /* remove linha e sombra */
     box-shadow: none !important;
-    border-bottom: none !important;
 }}
 
 .grid-top {{
@@ -155,19 +151,15 @@ html, body {{
 
 .card-top {{
     background: white;
-    border-radius: 16px;
     padding: 22px;
+    border-radius: 16px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
     display: flex;
     flex-direction: column;
 }}
 
-/* 🔥 Altura fixa para alinhar títulos */
 .header-block {{
-    min-height: 90px; /* Ajuste fino se quiser */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    min-height: 90px;
 }}
 
 .title {{
@@ -190,7 +182,7 @@ html, body {{
     border: 1px solid #e3e1dd;
 }}
 
-/* 🔥 ÁREA DE SCROLL ÚNICO */
+/* SCROLL */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
@@ -198,26 +190,28 @@ html, body {{
     padding: 20px;
 }}
 
-.grid-desc {{
+/* 🔥 GRID DE LINHAS — cada linha terá N colunas iguais */
+.grid-row {{
     display: grid;
     grid-template-columns: repeat({n}, 1fr);
     gap: 24px;
+    align-items: stretch;    /* 🔥 força mesmas alturas */
 }}
 
-.card-desc {{
+.cell {{
     background: white;
     border-radius: 16px;
-    padding: 20px;
+    padding: 18px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.08);
 }}
 
 .section-title {{
     font-size: 17px;
     font-weight: 700;
-    margin: 10px 0 6px 0;
+    margin-bottom: 6px;
     display: flex;
-    align-items: center;
     gap: 8px;
+    align-items: center;
 }}
 
 .section-title img {{
@@ -234,15 +228,13 @@ html, body {{
 </head>
 
 <body>
-
 <div id="viewport">
 
-    <!-- CARDS SUPERIORES -->
     <div id="top-area">
         <div class="grid-top">
     """
 
-    # CARDS SUPERIORES
+    # ----------------- CARDS SUPERIORES -----------------
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -257,7 +249,6 @@ html, body {{
                 <div class="title">{job}</div>
                 <div class="gg">GG {gg}</div>
             </div>
-
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -271,38 +262,34 @@ html, body {{
         </div>
     </div>
 
-    <!-- ÁREA ROLÁVEL ÚNICA -->
+    <!-- SCROLL -->
     <div id="scroll-area">
-        <div class="grid-desc">
     """
 
-    # CARDS DE DESCRIÇÃO
-    for p in profiles:
-        html_code += "<div class='card-desc'>"
+    # ----------------- LINHAS ALINHADAS -----------------
+    for sec in sections:
 
-        for sec in sections:
+        html_code += f"""<div class="grid-row">"""
+
+        for p in profiles:
             val = p.get(sec, "")
-            if not val or str(val).strip() == "":
-                continue
-
-            ic = icons[sec]
 
             html_code += f"""
+            <div class="cell">
                 <div class="section-title">
-                    <img src="assets/icons/sig/{ic}">
+                    <img src="assets/icons/sig/{icons[sec]}">
                     {html.escape(sec)}
                 </div>
                 <div class="text">{html.escape(str(val))}</div>
+            </div>
             """
 
         html_code += "</div>"
 
     html_code += """
-        </div>
     </div>
 
 </div>
-
 </body>
 </html>
 """
