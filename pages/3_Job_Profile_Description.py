@@ -12,7 +12,7 @@ st.set_page_config(page_title="Job Profile Description", layout="wide")
 # HEADER
 # -------------------------------------------------------------------
 st.markdown("""
-<h1 style="font-size:36px; font-weight:700; margin-bottom:5px;">
+<h1 style="font-size:36px; font-weight:700; margin-bottom:4px;">
     Job Profile Description
 </h1>
 <hr style="margin-top:0;">
@@ -32,42 +32,60 @@ df = load_profiles()
 # -------------------------------------------------------------------
 st.subheader("🔍 Job Profile Description Explorer")
 
-f1, f2, f3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-with f1:
-    jf = st.selectbox("Job Family",
-                      ["All"] + sorted(df["Job Family"].dropna().unique()))
+with c1:
+    job_family = st.selectbox(
+        "Job Family", 
+        ["All"] + sorted(df["Job Family"].dropna().unique())
+    )
 
-with f2:
-    sf_list = df[df["Job Family"] == jf]["Sub Job Family"].dropna().unique() if jf != "All" else df["Sub Job Family"].dropna().unique()
-    sf = st.selectbox("Sub Job Family",
-                      ["All"] + sorted(sf_list))
+with c2:
+    subfam_list = df[df["Job Family"] == job_family]["Sub Job Family"].dropna().unique() \
+                   if job_family != "All" else df["Sub Job Family"].dropna().unique()
 
-with f3:
-    cp_list = df[df["Sub Job Family"] == sf]["Career Path"].dropna().unique() if sf != "All" else df["Career Path"].dropna().unique()
-    cp = st.selectbox("Career Path",
-                      ["All"] + sorted(cp_list))
+    sub_family = st.selectbox(
+        "Sub Job Family",
+        ["All"] + sorted(subfam_list)
+    )
+
+with c3:
+    path_list = df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique() \
+                if sub_family != "All" else df["Career Path"].dropna().unique()
+
+    career_path = st.selectbox(
+        "Career Path",
+        ["All"] + sorted(path_list)
+    )
 
 flt = df.copy()
 
-if jf != "All":
-    flt = flt[flt["Job Family"] == jf]
-if sf != "All":
-    flt = flt[flt["Sub Job Family"] == sf]
-if cp != "All":
-    flt = flt[flt["Career Path"] == cp]
+if job_family != "All":
+    flt = flt[flt["Job Family"] == job_family]
+if sub_family != "All":
+    flt = flt[flt["Sub Job Family"] == sub_family]
+if career_path != "All":
+    flt = flt[flt["Career Path"] == career_path]
 
-flt["label"] = flt["GG"].astype(str) + " • " + flt["Job Profile"]
+# LABEL = A) Global Grade + Job Profile
+flt["label"] = flt["Global Grade"].astype(str) + " • " + flt["Job Profile"]
 
-selected = st.multiselect("Select up to 3 profiles:", flt["label"].tolist(), max_selections=3)
+selected = st.multiselect(
+    "Select up to 3 profiles:",
+    flt["label"].tolist(),
+    max_selections=3
+)
 
 if not selected:
     st.stop()
 
-profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
+profiles = [
+    flt[flt["label"] == s].iloc[0].to_dict()
+    for s in selected
+]
 
 # -------------------------------------------------------------------
-# SECTIONS (STATIC ORDER)
+# SECTIONS
 # -------------------------------------------------------------------
 sections = [
     "Sub Job Family Description",
@@ -79,7 +97,7 @@ sections = [
     "Specific parameters / KPIs",
     "Competencies 1",
     "Competencies 2",
-    "Competencies 3"
+    "Competencies 3",
 ]
 
 icons = {
@@ -96,7 +114,7 @@ icons = {
 }
 
 # -------------------------------------------------------------------
-# BUILD HTML
+# BUILD HTML FINAL
 # -------------------------------------------------------------------
 def build_html(profiles):
 
@@ -107,17 +125,11 @@ def build_html(profiles):
     <head>
     <style>
 
-    body {{
+    html, body, #wrap {{
         margin: 0;
         padding: 0;
-        font-family: 'Segoe UI', sans-serif;
-        background: white;
-    }}
-
-    /* WRAPPER FORÇANDO O STICKY FUNCIONAR */
-    #wrap {{
-        height: auto !important;
         overflow: visible !important;
+        font-family: 'Segoe UI', sans-serif;
     }}
 
     /* GRID */
@@ -128,12 +140,12 @@ def build_html(profiles):
         width: 100%;
     }}
 
-    /* CARD SUPERIOR (STICKY) */
+    /* TOP CARDS (sticky) */
     .card-top {{
         background: white;
-        border-radius: 16px;
         padding: 22px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.12);
         position: sticky;
         top: 0;
         z-index: 50;
@@ -146,28 +158,36 @@ def build_html(profiles):
 
     .gg {{
         color: #145efc;
-        font-weight: 700;
         font-size: 18px;
+        font-weight: 700;
         margin-top: 8px;
     }}
 
     .meta {{
-        background: #f5f3ef;
-        padding: 14px;
+        background: #f5f3ee;
+        border: 1px solid #e3e1dd;
         border-radius: 12px;
-        font-size: 15px;
+        padding: 14px;
         margin-top: 14px;
+        font-size: 15px;
         line-height: 1.45;
-        border: 1px solid #e8e6e2;
     }}
 
-    /* CARD INFERIOR */
+    /* SCROLL AREA (UNIFIED SCROLL) */
+    .scroll-area {{
+        height: 1500px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 12px;
+        margin-top: 26px;
+    }}
+
+    /* DESCRIPTION CARDS */
     .card-desc {{
         background: white;
         padding: 22px;
         border-radius: 16px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-        margin-bottom: 42px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }}
 
     .section-title {{
@@ -184,17 +204,10 @@ def build_html(profiles):
     }}
 
     .text {{
-        white-space: pre-wrap;
+        font-size: 15px;
         line-height: 1.45;
+        white-space: pre-wrap;
         margin-bottom: 18px;
-    }}
-
-    .scroll-page {{
-        height: 1500px;  /* TELA LONGA */
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 15px;
-        margin-top: 20px;
     }}
 
     </style>
@@ -203,18 +216,18 @@ def build_html(profiles):
     <body>
     <div id="wrap">
 
-        <!-- GRID DOS TOP CARDS (STICKY) -->
+        <!-- TOP CARDS -->
         <div class="grid">
     """
 
     # ---------- TOP CARDS ----------
     for p in profiles:
-        job = html.escape(str(p["Job Profile"]))
-        gg = html.escape(str(p["GG"]))
-        jf = html.escape(str(p["Job Family"]))
-        sf = html.escape(str(p["Sub Job Family"]))
-        cp = html.escape(str(p["Career Path"]))
-        fc = html.escape(str(p["Full Job Code"]))
+        job = html.escape(p["Job Profile"])
+        gg = html.escape(str(p["Global Grade"]))
+        jf = html.escape(p["Job Family"])
+        sf = html.escape(p["Sub Job Family"])
+        cp = html.escape(p["Career Path"])
+        fc = html.escape(p["Full Job Code"])
 
         html_code += f"""
         <div class="card-top">
@@ -230,17 +243,14 @@ def build_html(profiles):
         </div>
         """
 
+    # ---------- DESCRIPTION SECTION (scroll único) ----------
     html_code += """
-        </div>  <!-- end grid -->
-    """
+        </div>
 
-    # ---------- MAIN SCROLL AREA ----------
-    html_code += """
-        <div class="scroll-page">
+        <div class="scroll-area">
             <div class="grid">
     """
 
-    # ---------- DESCRIPTION CARDS ----------
     for p in profiles:
         html_code += "<div class='card-desc'>"
 
@@ -256,16 +266,14 @@ def build_html(profiles):
                     <img src="assets/icons/sig/{icon}">
                     {html.escape(sec)}
                 </div>
-                <div class="text">
-                    {html.escape(str(val))}
-                </div>
+                <div class="text">{html.escape(str(val))}</div>
             """
 
         html_code += "</div>"
 
     html_code += """
             </div>
-        </div> <!-- end scroll-page -->
+        </div>
 
     </div>
     </body>
@@ -275,6 +283,6 @@ def build_html(profiles):
     return html_code
 
 # -------------------------------------------------------------------
-# RENDER HTML FINAL
+# RENDER HTML
 # -------------------------------------------------------------------
 components.html(build_html(profiles), height=1800, scrolling=False)
