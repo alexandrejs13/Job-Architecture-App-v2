@@ -71,26 +71,31 @@ html, body, [data-testid="stAppViewContainer"] {
 /* ============================================================
     CORREÇÃO EXCLUSIVA DO ITEM “app”
     ============================================================ */
-/* item “app” fica igual aos demais */
+/* Ocultação anterior removida/substituída pelas regras do FIX FINALÍSSIMO */
+/* Caso deseje manter o estilo quando a página 'app' estiver selecionada: */
 [data-testid="stSidebar"] div[role="list"] a[href="/"] {
     font-size: 20px !important;
     font-weight: 500 !important;
 }
-
-/* Quando “app” estiver selecionado */
 [data-testid="stSidebar"] div[role="list"] a[href="/"].highlighted {
     font-weight: 700 !important;
 }
 
 /* ============================================================
-   FIX FINAL: Ocultar o item "app" do menu lateral (página inicial /)
-   (Adicionado para resolver o conflito com o botão de recolher)
+   FIX FINALÍSSIMO: Ocultar o contêiner do primeiro item "app"
+   (Última tentativa via CSS para resolver o conflito na barra lateral)
    ============================================================ */
 
-/* Oculta o link de navegação que aponta para a página inicial ("/"). */
-[data-testid="stSidebarNav"] a[href="/"] {
+/* Oculta o contêiner completo do primeiro item da lista de navegação (que é o 'app') */
+[data-testid="stSidebarNav"] > ul > div:first-child {
     display: none !important;
 }
+
+/* Oculta o rótulo da aplicação na barra lateral (ex: "streamlitApp") */
+[data-testid="stSidebarContent"] > div:first-child > div:first-child > div:nth-child(2) {
+    display: none !important;
+}
+
 
 /* ============================================================
     HEADER / TOOLBAR — LIMPEZA E AJUSTE DO BOTÃO DE RECOLHER
@@ -106,12 +111,7 @@ header [data-testid="stToolbar"] div:not(:has(button)) {
     margin: 0;
 }
 
-/* 2. Oculta o rótulo da aplicação na barra lateral (ex: "streamlitApp") que interfere na página "app". */
-[data-testid="stSidebarContent"] > div:first-child > div:first-child > div:nth-child(2) {
-    display: none !important;
-}
-
-/* 3. Garante que o ícone do botão de expansão/recolhimento apareça corretamente. */
+/* 2. Garante que o ícone do botão de expansão/recolhimento apareça corretamente. */
 [data-testid="stToolbar"] button {
     background: none !important;
     color: #000 !important; /* Cor do ícone */
@@ -121,7 +121,7 @@ header [data-testid="stToolbar"] div:not(:has(button)) {
     margin-right: 10px;
 }
 
-/* 4. Ajusta o alinhamento e fundo do header */
+/* 3. Ajusta o alinhamento e fundo do header */
 header {
     background: white !important;
     align-items: center !important;
