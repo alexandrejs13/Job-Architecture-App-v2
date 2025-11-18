@@ -31,6 +31,7 @@ if os.path.exists(css_path):
     with open(css_path, "r", encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
+
 # ==========================================================
 # FONTES PP SIG FLOW
 # ==========================================================
@@ -42,7 +43,7 @@ except:
 
 
 # ==========================================================
-# IMAGEM DE CAPA — SEM TÍTULO NO HEADER
+# IMAGEM DE CAPA — PRIMEIRO ELEMENTO DA PÁGINA
 # ==========================================================
 home_img_path = "assets/home/home_card.jpg"
 home_img_b64 = load_image_b64(home_img_path)
@@ -52,31 +53,52 @@ st.markdown(
     <div class="sig-container" style="margin-top: 12px; margin-bottom: 32px;">
         <img 
             src="data:image/jpeg;base64,{home_img_b64}" 
-            style="width: 100%; max-width: 1400px; display: block; margin: 0 auto; border-radius: 12px;"
+            style="
+                width: 100%; 
+                max-width: 1400px; 
+                display: block; 
+                margin: 0 auto; 
+                border-radius: 12px;
+            "
         >
     </div>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 
 # ==========================================================
-# TÍTULO + TEXTO DESCRITIVO (CONTEÚDO ORIGINAL)
+# TÍTULO + TEXTO DESCRITIVO (FONTES SIG)
 # ==========================================================
+st.markdown(
+    """
+    <div class="sig-container" style="margin-top: 0px;">
 
-st.markdown("""
-<div class="sig-container" style="margin-top: 0px;">
-    <h1 style="font-family: 'PP-Sigflow-SemiBold'; font-size: 40px; margin-bottom: 10px;">
-        Job Architecture
-    </h1>
+        <h1 style="
+            font-family: 'PP-Sigflow-SemiBold';
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: #000;
+        ">
+            Job Architecture
+        </h1>
 
-    <p style="font-size: 18px; line-height: 1.6; max-width: 900px;">
-        Bem-vindo ao portal de Job Architecture. Aqui você encontra as estruturas organizadas 
-        de famílias de cargos, perfis de posição, níveis, responsabilidades e competências 
-        essenciais para garantir consistência, governança e alinhamento global.
-        <br><br>
-        Explore as seções ao lado para navegar por famílias, perfis, comparações, dashboards 
-        e muito mais — tudo com a identidade visual SIG e uma experiência totalmente integrada.
-    </p>
-</div>
-""", unsafe_allow_html=True)
+        <p style="
+            font-family: 'PP-Sigflow-Regular';
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 900px;
+            color: #000;
+        ">
+            Bem-vindo ao portal de Job Architecture. Aqui você encontra as estruturas organizadas 
+            de famílias de cargos, perfis de posição, níveis, responsabilidades e competências 
+            essenciais para garantir consistência, governança e alinhamento global.
+            <br><br>
+            Explore as seções ao lado para navegar por famílias, perfis, comparações, dashboards 
+            e muito mais — tudo com a identidade visual SIG e uma experiência totalmente integrada.
+        </p>
+
+    </div>
+    """,
+    unsafe_allow_html=True
+)
