@@ -13,21 +13,52 @@ st.set_page_config(page_title="Dashboard", layout="wide")
 # ==========================================================
 def load_font_base64(path):
     with open(path, "rb") as f:
+       def load_font_base64(path):
+    """Load font safely without breaking app if file does not exist."""
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
+
 
 font_regular = load_font_base64("assets/fonts/PP-SIG-Flow-Regular.ttf")
 font_semibold = load_font_base64("assets/fonts/PP-SIG-Flow-Semibold.ttf")
 
-# ==========================================================
-# GLOBAL CSS (APLICA TIPOGRAFIA + GRID REAL)
-# ==========================================================
+css_fonts = ""
+
+if font_regular:
+    css_fonts += f"""
+    @font-face {{
+        font-family: 'SIGFlow';
+        src: url(data:font/ttf;base64,{font_regular}) format('truetype');
+        font-weight: 400;
+    }}
+    """
+
+if font_semibold:
+    css_fonts += f"""
+    @font-face {{
+        font-family: 'SIGFlow';
+        src: url(data:font/ttf;base64,{font_semibold}) format('truetype');
+        font-weight: 600;
+    }}
+    """
+
+
 st.markdown(f"""
 <style>
+{css_fonts}
 
-@font-face {{
-    font-family: 'SIGFlow';
-    src: url(data:font/ttf;base64,{font_regular}) format('truetype');
-    font-weight: 400;
+*, body {{
+    font-family: 'SIGFlow', sans-serif !important;
+}}
+
+section.main > div {{
+    max-width: 1180px;
+}}
+</style>
+""", unsafe_allow_html=True)
+
 }}
 
 @font-face {{
