@@ -32,8 +32,3 @@ st.markdown(f"""
 
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
-
-# ==========================================================
-# CONTEÚDO DA PÁGINA (o que vier depois)
-# ==========================================================
-st.write("Conteúdo da página Job Families aqui…")
