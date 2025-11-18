@@ -89,14 +89,14 @@ Each level describes how the role contributes to the organization.
 Clear definitions of what each role *does*, including:  
 responsibilities, required skills, knowledge, complexity, autonomy, and typical outcomes.
 
-#### **5. Career Streams**
+#### **5. Career Path**
 Pathways that reflect how careers grow:
 - Management  
-- Professional/Expert  
+- Professional / Expert  
 - Project or Program Leadership  
 - Operations / Technical Tracks  
 
-These streams align roles with different forms of impact — whether through expertise, leadership, or execution.
+These paths align roles with different forms of impact — whether through expertise, leadership, or execution.
 
 ---
 
@@ -154,4 +154,3 @@ It becomes a living system that connects talent, performance, structure, and rew
 Job Architecture is not just a catalog of jobs;  
 it is the **operating system** that organizes how the company understands work, evaluates roles, and enables people to grow.
 """)
-
