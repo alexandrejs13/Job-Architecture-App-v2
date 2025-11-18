@@ -3,13 +3,13 @@ import pandas as pd
 import html
 from streamlit.components.v1 import html as components_html
 
-
 # ---------------------------------------------------
 # LOAD DATA SAFELY
 # ---------------------------------------------------
 @st.cache_data
 def load_profiles():
-    df = pd.read_excel("data/Job Profile.xlsx")   # nome do arquivo CONFIRMADO
+    # Caminho confirmado pelo usuário
+    df = pd.read_excel("data/Job Profile.xlsx")
     return df
 
 df = load_profiles()
@@ -31,7 +31,6 @@ if len(selected) == 0:
 
 profiles = df[df["Job Profile"].isin(selected)].to_dict(orient="records")
 
-
 # ---------------------------------------------------
 # BUILD HTML
 # ---------------------------------------------------
@@ -47,7 +46,7 @@ def build_html(profiles):
         margin: 0;
         padding: 0;
         font-family: 'Segoe UI', sans-serif;
-        overflow: hidden;
+        overflow: auto;  /* CORREÇÃO FUNDAMENTAL */
     }}
 
     #layout {{
@@ -56,11 +55,11 @@ def build_html(profiles):
         height: 100vh;
     }}
 
-    /* TOP STICKY BLOCK */
+    /* TOP FIXED CARDS */
     #top-block {{
         position: sticky;
         top: 0;
-        z-index: 1000;
+        z-index: 9999;
         background: white;
         padding: 16px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.15);
@@ -77,7 +76,6 @@ def build_html(profiles):
         padding: 18px;
         border-radius: 14px;
         box-shadow: 0 4px 18px rgba(0,0,0,0.12);
-        font-size: 16px;
     }}
 
     .job {{
@@ -92,7 +90,7 @@ def build_html(profiles):
         margin-bottom: 12px;
     }}
 
-    /* SCROLL AREA */
+    /* SCROLLABLE DESCRIPTION AREA */
     #scroll-block {{
         flex: 1;
         overflow-y: auto;
@@ -110,6 +108,7 @@ def build_html(profiles):
         padding: 18px;
         border-radius: 14px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+        font-size: 16px;
     }}
 
     </style>
@@ -119,7 +118,7 @@ def build_html(profiles):
 
     <div id="layout">
 
-        <!-- STICKY BLOCK -->
+        <!-- FIXED TOP GRID -->
         <div id="top-block">
             <div class="grid-top">
     """
@@ -148,7 +147,7 @@ def build_html(profiles):
             </div>
         </div>
 
-        <!-- SCROLL AREA -->
+        <!-- SCROLLABLE DESCRIPTION GRID -->
         <div id="scroll-block">
             <div class="grid-desc">
     """
@@ -157,8 +156,8 @@ def build_html(profiles):
     for p in profiles:
         html_code += f"""
         <div class="card-desc">
-            <b>Description test block for:</b><br>
-            {html.escape(p.get('Job Profile', ''))}<br><br>
+            <b>Description for:</b><br>
+            {html.escape(p.get("Job Profile", ""))}<br><br>
             Aqui entra o conteúdo completo depois.
         </div>
         """
