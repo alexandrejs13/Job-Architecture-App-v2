@@ -17,30 +17,37 @@ def load_icon_png(path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 # ==========================================================
-# HEADER — CENTRALIZADO
+# HEADER — HOME CENTRALIZADA
 # ==========================================================
 icon_path = "assets/icons/governance.png"
 icon_b64 = load_icon_png(icon_path)
 
-html_home = """
+html_home = f"""
 <div style='
-    min-height:70vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 40px;
 '>
-    <img src='data:image/png;base64:{icon}' style='width:200px; height:200px; margin-bottom:25px;'>
+    <img src='data:image/png;base64,{icon_b64}'
+         style='
+            width: 200px;
+            height: 200px;
+            margin-bottom: 28px;
+         '>
+
     <h1 style='
-        font-size:46px;
-        font-weight:700;
-        margin:0;
-        padding:0;
-        text-align:center;
+        font-size: 48px;
+        font-weight: 700;
+        margin: 0;
+        padding: 0;
+        text-align: center;
     '>
         Job Architecture
     </h1>
 </div>
 """
 
-st.markdown(html_home.format(icon=icon_b64), unsafe_allow_html=True)
+st.markdown(html_home, unsafe_allow_html=True)
