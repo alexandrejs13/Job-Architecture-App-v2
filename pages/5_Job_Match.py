@@ -12,7 +12,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Job Match", layout="wide")
 
-
 # ----------------------------------------------------------
 # LOAD ICON
 # ----------------------------------------------------------
@@ -22,10 +21,8 @@ def load_icon_png(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-
 icon_path = "assets/icons/checkmark_success.png"
 icon_b64 = load_icon_png(icon_path)
-
 
 # ----------------------------------------------------------
 # HEADER
@@ -51,7 +48,6 @@ st.markdown(f"""
 
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
-
 
 # ==========================================================
 # GLOBAL LAYOUT — SIG WIDTH CONTROL (FULL VERSION)
@@ -93,27 +89,9 @@ st.markdown("""
     .card-title {
         font-size: 20px;
         font-weight: 700;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
 
-</style>
-""", unsafe_allow_html=True)
-
-
-# ==========================================================
-# FIX EMPTY LABELS OUTSIDE CARDS (STREAMLIT HACK)
-# ==========================================================
-st.markdown("""
-<style>
-    /* Hide empty labels Streamlit generates */
-    .stSelectbox > label {
-        display: none !important;
-    }
-
-    /* Reduce spacing on selects */
-    .stSelectbox {
-        margin-top: -6px !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -125,12 +103,10 @@ st.markdown("""
 def load_profiles():
     return pd.read_excel("data/Job Profile.xlsx")
 
-
 df = load_profiles()
 
-
 # ==========================================================
-# LOAD ICONS (SVG)
+# LOAD SVG ICONS
 # ==========================================================
 def load_svg(svg_name):
     path = f"assets/icons/sig/{svg_name}"
@@ -138,7 +114,6 @@ def load_svg(svg_name):
         return ""
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
-
 
 icons_svg = {
     "Sub Job Family Description": load_svg("Hierarchy.svg"),
@@ -153,7 +128,6 @@ icons_svg = {
     "Competencies 3": load_svg("Setting_Cog.svg"),
 }
 
-
 sections = [
     "Sub Job Family Description",
     "Job Profile Description",
@@ -167,9 +141,8 @@ sections = [
     "Competencies 3",
 ]
 
-
 # ==========================================================
-# DESCRIPTION LAYOUT (PREMIUM — 1 COLUMN)
+# DESCRIPTION RENDERING (1 COLUMN PREMIUM)
 # ==========================================================
 def build_single_profile_html(p):
 
@@ -188,8 +161,7 @@ def build_single_profile_html(p):
 <style>
 
 html, body {{
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
     height: 100%;
     overflow: hidden;
     font-family: 'Segoe UI', sans-serif;
@@ -276,7 +248,6 @@ html, body {{
         <div class="card-top">
             <div class="title">{job}</div>
             <div class="gg">GG {gg}</div>
-
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -312,8 +283,6 @@ html, body {{
 """
     return html_code
 
-
-
 # ==========================================================
 # MATCH ENGINE
 # ==========================================================
@@ -323,10 +292,8 @@ def clean_text(t):
     t = re.sub(r"[^a-z0-9\s]", " ", t)
     return t
 
-
 def extract_keywords(text):
     return set(clean_text(text).split())
-
 
 def score_match(user_tags, row):
 
@@ -343,7 +310,6 @@ def score_match(user_tags, row):
     }
 
     score = 0
-
     for col, w in weights.items():
         kw = extract_keywords(row.get(col, ""))
         overlap = len(user_tags.intersection(kw))
@@ -351,10 +317,8 @@ def score_match(user_tags, row):
 
     return score
 
-
-
 # ==========================================================
-# USER INPUT — FAMILY + SUBFAMILY
+# USER INPUT — FAMILY / SUB FAMILY
 # ==========================================================
 st.subheader("Job Family Information")
 
@@ -368,13 +332,11 @@ with c2:
     subfamily = st.selectbox("Sub Job Family", sorted(sublist))
 
 flt = df[(df["Job Family"] == family) & (df["Sub Job Family"] == subfamily)]
-
 if flt.empty:
     st.stop()
 
-
 # ==========================================================
-# 3 CARDS CONTAINER
+# THREE-COLUMN FORM — WITH TITLES ABOVE CARDS (RESTORED)
 # ==========================================================
 with st.container():
 
@@ -384,8 +346,10 @@ with st.container():
     # CARD 1 — STRATEGIC IMPACT & SCOPE
     # ------------------------------------------------------
     with colA:
-        st.markdown('<div class="card-block">', unsafe_allow_html=True)
+        # Title in the “empty” container above the card
         st.markdown('<div class="card-title">Strategic Impact & Scope</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="card-block">', unsafe_allow_html=True)
 
         job_category = st.selectbox(
             "Job Category *",
@@ -421,8 +385,9 @@ with st.container():
     # CARD 2 — AUTONOMY & COMPLEXITY
     # ------------------------------------------------------
     with colB:
-        st.markdown('<div class="card-block">', unsafe_allow_html=True)
         st.markdown('<div class="card-title">Autonomy & Complexity</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="card-block">', unsafe_allow_html=True)
 
         autonomy = st.selectbox(
             "Autonomy Level *",
@@ -474,8 +439,9 @@ with st.container():
     # CARD 3 — KNOWLEDGE, KPIs & COMPETENCIES
     # ------------------------------------------------------
     with colC:
-        st.markdown('<div class="card-block">', unsafe_allow_html=True)
         st.markdown('<div class="card-title">Knowledge, KPIs & Competencies</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="card-block">', unsafe_allow_html=True)
 
         education = st.selectbox(
             "Education Level *",
@@ -512,9 +478,8 @@ with st.container():
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-
 # ==========================================================
-# USER TAG BUILDER
+# BUILD USER TAGS
 # ==========================================================
 def build_user_tags():
 
@@ -556,15 +521,11 @@ def build_user_tags():
 
     return tags
 
-
-
 # ==========================================================
 # BUTTON
 # ==========================================================
 st.write("")
 generate = st.button("Generate Job Match Description", type="primary")
-
-
 
 # ==========================================================
 # RUN MATCH
