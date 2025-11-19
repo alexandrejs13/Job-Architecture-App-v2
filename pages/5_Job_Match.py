@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import base64
 import os
 
@@ -70,14 +69,14 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-# ---------------------------------------------------------
-# JOB FAMILY SECTION
-# ---------------------------------------------------------
+# =================================================================
+# JOB FAMILY
+# =================================================================
 st.markdown("## Job Family Information")
 
-jf1, jf2 = st.columns([1, 1])
+col1, col2 = st.columns(2)
 
-with jf1:
+with col1:
     job_family = st.selectbox(
         "Job Family",
         [
@@ -92,7 +91,7 @@ with jf1:
         ]
     )
 
-with jf2:
+with col2:
     sub_job_family = st.selectbox(
         "Sub Job Family",
         [
@@ -104,41 +103,28 @@ with jf2:
         ]
     )
 
-# ==========================================================
-# MAIN QUESTIONNAIRE — THREE CARDS (NO EMPTY CONTAINERS)
-# ==========================================================
 
-cA, cB, cC = st.columns([1, 1, 1])
+# =================================================================
+# 3 REAL CARDS — sem NENHUM container extra
+# =================================================================
+cA, cB, cC = st.columns(3)
 
-# ---------------------------------------------------------
-# CARD A – Strategic Impact & Scope
-# ---------------------------------------------------------
+# ------------------------------
+# CARD A
+# ------------------------------
 with cA:
     st.markdown('<div class="card-block">', unsafe_allow_html=True)
-
     st.markdown('<div class="card-title">Strategic Impact & Scope</div>', unsafe_allow_html=True)
 
     job_category = st.selectbox(
         "Job Category *",
         ["Executive", "Manager", "Professional", "Technical Support", "Business Support", "Production"]
     )
-
-    geo_scope = st.selectbox(
-        "Geographic Scope *",
-        ["Local", "Regional", "Multi-country", "Global"]
-    )
-
+    geo_scope = st.selectbox("Geographic Scope *", ["Local", "Regional", "Multi-country", "Global"])
     org_impact = st.selectbox(
         "Organizational Impact *",
-        [
-            "Team",
-            "Department / Subfunction",
-            "Function",
-            "Multi-function / Business Unit",
-            "Enterprise-wide"
-        ]
+        ["Team", "Department / Subfunction", "Function", "Multi-function / Business Unit", "Enterprise-wide"]
     )
-
     span_control = st.selectbox(
         "Span of Control *",
         [
@@ -155,12 +141,11 @@ with cA:
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-# ---------------------------------------------------------
-# CARD B – Autonomy & Complexity
-# ---------------------------------------------------------
+# ------------------------------
+# CARD B
+# ------------------------------
 with cB:
     st.markdown('<div class="card-block">', unsafe_allow_html=True)
-
     st.markdown('<div class="card-title">Autonomy & Complexity</div>', unsafe_allow_html=True)
 
     autonomy = st.selectbox(
@@ -210,74 +195,94 @@ with cB:
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-# ---------------------------------------------------------
-# CARD C – Knowledge, KPIs & Competencies
-# ---------------------------------------------------------
+# ------------------------------
+# CARD C
+# ------------------------------
 with cC:
     st.markdown('<div class="card-block">', unsafe_allow_html=True)
-
     st.markdown('<div class="card-title">Knowledge, KPIs & Competencies</div>', unsafe_allow_html=True)
 
     education = st.selectbox(
         "Education Level *",
-        [
-            "High School",
-            "Technical Degree",
-            "Bachelor’s",
-            "Post-graduate / Specialization",
-            "Master’s",
-            "Doctorate"
-        ]
+        ["High School", "Technical Degree", "Bachelor’s", "Post-graduate / Specialization", "Master’s", "Doctorate"]
     )
 
     experience = st.selectbox(
         "Experience Level *",
-        [
-            "< 2 years",
-            "2–5 years",
-            "5–10 years",
-            "10–15 years",
-            "15+ years"
-        ]
+        ["< 2 years", "2–5 years", "5–10 years", "10–15 years", "15+ years"]
     )
 
     kpis = st.multiselect(
         "Primary KPIs * (select ≥1)",
-        [
-            "Financial",
-            "Customer",
-            "Operational",
-            "Quality",
-            "Safety",
-            "Compliance",
-            "Project Delivery",
-            "People Leadership"
-        ]
+        ["Financial", "Customer", "Operational", "Quality", "Safety", "Compliance", "Project Delivery", "People Leadership"]
     )
 
     competencies = st.multiselect(
         "Core Competencies * (select ≥1)",
         [
-            "Communication",
-            "Collaboration",
-            "Analytical Thinking",
-            "Technical Expertise",
-            "Leadership",
-            "Innovation",
-            "Strategic Thinking",
-            "Customer Orientation"
+            "Communication", "Collaboration", "Analytical Thinking", "Technical Expertise", "Leadership",
+            "Innovation", "Strategic Thinking", "Customer Orientation"
         ]
     )
 
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-# ==========================================================
+# =================================================================
 # BUTTON
-# ==========================================================
+# =================================================================
 center = st.columns([4, 2, 4])[1]
 with center:
     generate = st.button("Generate Job Match Description", use_container_width=True)
 
+# =================================================================
+# GENERATION LOGIC
+# =================================================================
 if generate:
+
+    description = f"""
+### Job Match Description
+
+**Job Family:** {job_family}  
+**Sub Job Family:** {sub_job_family}
+
+---
+
+#### Strategic Impact & Scope
+- **Job Category:** {job_category}
+- **Geographic Scope:** {geo_scope}
+- **Organizational Impact:** {org_impact}
+- **Span of Control:** {span_control}
+
+---
+
+#### Autonomy & Complexity
+- **Autonomy Level:** {autonomy}
+- **Problem Solving Complexity:** {problem_solving}
+- **Knowledge Depth:** {knowledge_depth}
+- **Influence Level:** {influence}
+
+---
+
+#### Knowledge, KPIs & Competencies
+- **Education Level:** {education}
+- **Experience Level:** {experience}
+- **KPIs:** {", ".join(kpis) if kpis else "None"}
+- **Competencies:** {", ".join(competencies) if competencies else "None"}
+
+---
+
+### Narrative Summary
+
+This role sits within the **{job_family} / {sub_job_family}** domain and operates at a **{job_category}** level.  
+It influences the **{org_impact}** scope, with responsibilities spanning **{geo_scope.lower()}** impact.
+
+The role requires **{autonomy.lower()}**, handles **{problem_solving.lower()}**, and demands **{knowledge_depth.lower()}**.  
+Its sphere of influence reaches **{influence.lower()}**.
+
+Qualifications expected include **{education}**, combined with **{experience}** of relevant experience.  
+Performance is measured through KPIs such as **{", ".join(kpis)}**, supported by competencies including **{", ".join(competencies)}**.
+    """
+
     st.success("Job Match Description generated successfully!")
+    st.markdown(description)
