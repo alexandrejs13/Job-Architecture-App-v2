@@ -1,5 +1,5 @@
 # ==========================================================
-# PAGE CONFIG + HEADER (PADRÃO SIG)
+# PAGE CONFIG + HEADER (SIG STANDARD)
 # ==========================================================
 import streamlit as st
 import pandas as pd
@@ -47,7 +47,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------
-# GLOBAL LAYOUT STYLE (SIG)
+# GLOBAL LAYOUT STYLE
 # ----------------------------------------------------------
 st.markdown("""
 <style>
@@ -57,6 +57,19 @@ st.markdown("""
     margin-right: auto;
     padding-left: 20px;
     padding-right: 20px;
+}
+.card-block {
+    background: #f8f7f5;
+    padding: 20px 22px;
+    border-radius: 14px;
+    border: 1px solid #e4e2dd;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    margin-bottom: 18px;
+}
+.card-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 14px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -107,16 +120,16 @@ sections = [
 ]
 
 # ==========================================================
-# HTML RENDER (1 COLUNA, LAYOUT PREMIUM)
+# DESCRIPTION LAYOUT (PREMIUM, 1 COLUMN)
 # ==========================================================
 def build_single_profile_html(p):
 
     job = html.escape(p["Job Profile"])
-    gg = html.escape(str(p["Global Grade"]))
-    jf = html.escape(p["Job Family"])
-    sf = html.escape(p["Sub Job Family"])
-    cp = html.escape(p["Career Path"])
-    fc = html.escape(p["Full Job Code"])
+    gg  = html.escape(str(p["Global Grade"]))
+    jf  = html.escape(p["Job Family"])
+    sf  = html.escape(p["Sub Job Family"])
+    cp  = html.escape(p["Career Path"])
+    fc  = html.escape(p["Full Job Code"])
 
     html_code = f"""
 <html>
@@ -225,8 +238,8 @@ html, body {{
 
     # sections
     for sec in sections:
-        val = p.get(sec, "")
         icon = icons_svg.get(sec, "")
+        text = html.escape(str(p.get(sec, "")))
 
         html_code += f"""
         <div class="section-box">
@@ -235,25 +248,22 @@ html, body {{
                 {html.escape(sec)}
             </div>
             <div class="section-line"></div>
-            <div class="section-text">{html.escape(str(val))}</div>
+            <div class="section-text">{text}</div>
         </div>
         """
 
     html_code += """
     </div>
-
 </div>
 </body>
 </html>
 """
-
     return html_code
 
 
 # ==========================================================
-# MATCH ENGINE: TAGGING + SCORING
+# MATCH ENGINE (TAGGING + WEIGHTED SCORING)
 # ==========================================================
-
 def clean_text(t):
     if pd.isna(t): return ""
     t = str(t).lower()
@@ -265,9 +275,7 @@ def extract_keywords(text):
     words = set(text.split())
     return words
 
-def score_match(user_tags, job_profile_row):
-    """ Weighted scoring model """
-
+def score_match(user_tags, row):
     weights = {
         "Grade Differentiator": 25,
         "Qualifications": 20,
@@ -280,138 +288,266 @@ def score_match(user_tags, job_profile_row):
         "Career Band Description": 2,
     }
 
-    total = 0
+    score = 0
     for col, w in weights.items():
-        text = job_profile_row.get(col, "")
-        kw = extract_keywords(text)
-
+        kw = extract_keywords(row.get(col, ""))
         overlap = len(user_tags.intersection(kw))
-        total += overlap * w
+        score += overlap * w
 
-    return total
+    return score
 
 
 # ==========================================================
-# FORM QUESTIONS → TAG GENERATOR
+# START FORM
 # ==========================================================
+st.subheader("Job Family Information")
 
-st.subheader("Informações do cargo")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    family = st.selectbox("Job Family", sorted(df["Job Family"].dropna().unique()))
-
-with col2:
+c1, c2 = st.columns(2)
+with c1:
+    family = st.selectbox("Job Family *", sorted(df["Job Family"].dropna().unique()))
+with c2:
     sublist = df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()
-    subfamily = st.selectbox("Sub Job Family", sorted(sublist))
+    subfamily = st.selectbox("Sub Job Family *", sorted(sublist))
 
 flt = df[(df["Job Family"] == family) & (df["Sub Job Family"] == subfamily)]
 
 if flt.empty:
     st.stop()
 
-# ------------------------------
-# PERGUNTAS (GENÉRICAS + DECISIVAS)
-# ------------------------------
-
-st.markdown("### Características da função")
-
-# Autonomia
-aut = st.radio("Nível de autonomia do cargo:",
-               ["Baixa", "Moderada", "Alta"])
-
-# Impacto
-impact = st.radio("Impacto das decisões:",
-                  ["Local", "Área/Unidade", "Organizacional/Global"])
-
-# Complexidade do trabalho
-complexity = st.radio("Complexidade do trabalho:",
-                      ["Rotineiro", "Moderado", "Complexo"])
-
-# Experiência
-exp = st.radio("Nível de experiência típico:",
-               ["Até 3 anos", "3-7 anos", "7-12 anos", "12+ anos"])
-
-# Educação
-edu = st.radio("Nível educacional típico:",
-               ["Ensino Médio", "Técnico", "Graduação", "Pós/Especialização", "Mestrado/Doutorado"])
-
-# Tipo de KPIs
-kpi = st.multiselect(
-    "Quais tipos de KPIs esse cargo acompanha?",
-    ["Financeiros", "Clientes", "Operacionais", "Processos", "Projetos", "Segurança"]
-)
-
-# Competências comportamentais
-comp = st.multiselect(
-    "Competências comportamentais chave:",
-    ["Trabalho em equipe", "Comunicação", "Influência", "Análise", "Orientação a resultados", "Inovação"]
-)
+# ==========================================================
+# 3 COLUMN LAYOUT WITH CARDS
+# ==========================================================
+colA, colB, colC = st.columns(3)
 
 # ----------------------------------------------------------
-# BUILD USER TAGS
+# BLOCK 1 — STRATEGIC IMPACT & SCOPE
 # ----------------------------------------------------------
-user_tags = set()
+with colA:
+    st.markdown('<div class="card-block">', unsafe_allow_html=True)
+    st.markdown('<div class="card-title">Strategic Impact & Scope</div>', unsafe_allow_html=True)
 
-# autonomia
-if aut == "Alta": user_tags.update(["independent", "autonomy", "minimal", "self"])
-if aut == "Moderada": user_tags.update(["guided", "partial"])
-if aut == "Baixa": user_tags.update(["close supervision", "instructions"])
+    job_category = st.selectbox(
+        "Job Category *",
+        ["Executive", "Manager", "Professional", "Technical Support", "Business Support", "Production"]
+    )
 
-# impacto
-if impact == "Local": user_tags.update(["local"])
-if impact == "Área/Unidade": user_tags.update(["business unit", "cross functional"])
-if impact == "Organizacional/Global": user_tags.update(["global", "enterprise"])
+    geo_scope = st.selectbox(
+        "Geographic Scope *",
+        ["Local", "Regional", "Multi-country", "Global"]
+    )
 
-# complexidade
-if complexity == "Complexo": user_tags.update(["complex", "advanced"])
-if complexity == "Moderado": user_tags.update(["moderate"])
-if complexity == "Rotineiro": user_tags.update(["routine"])
+    org_impact = st.selectbox(
+        "Organizational Impact *",
+        ["Team", "Department / Subfunction", "Function", "Multi-function / BU-wide", "Enterprise-wide"]
+    )
 
-# educação
-mapping_edu = {
-    "Ensino Médio": ["basic"],
-    "Técnico": ["technical"],
-    "Graduação": ["degree", "bachelor"],
-    "Pós/Especialização": ["specialist", "advanced"],
-    "Mestrado/Doutorado": ["master", "doctorate", "phd"]
-}
-user_tags.update(mapping_edu.get(edu, []))
+    span_control = st.selectbox(
+        "Span of Control *",
+        [
+            "No direct reports",
+            "Individual contributor with influence",
+            "Supervises technicians/operators",
+            "Leads professionals",
+            "Leads multiple teams",
+            "Leads managers",
+            "Leads multi-layer organization"
+        ]
+    )
 
-# experiência
-mapping_exp = {
-    "Até 3 anos": ["junior"],
-    "3-7 anos": ["intermediate"],
-    "7-12 anos": ["senior"],
-    "12+ anos": ["expert", "leader"]
-}
-user_tags.update(mapping_exp.get(exp, []))
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# KPIs
-for k in kpi:
-    user_tags.add(k.lower())
 
-# competências
-for c in comp:
-    user_tags.add(c.lower())
+# ----------------------------------------------------------
+# BLOCK 2 — AUTONOMY & COMPLEXITY
+# ----------------------------------------------------------
+with colB:
+    st.markdown('<div class="card-block">', unsafe_allow_html=True)
+    st.markdown('<div class="card-title">Autonomy & Complexity</div>', unsafe_allow_html=True)
+
+    autonomy = st.selectbox(
+        "Autonomy Level *",
+        [
+            "Works under close supervision",
+            "Works under regular guidance",
+            "Works independently",
+            "Sets direction for others",
+            "Defines organizational strategy"
+        ]
+    )
+
+    problem_solving = st.selectbox(
+        "Problem Solving Complexity *",
+        [
+            "Routine / Standardized",
+            "Moderate analysis",
+            "Complex analysis",
+            "Novel / ambiguous problems",
+            "Strategic, organization-changing problems"
+        ]
+    )
+
+    knowledge_depth = st.selectbox(
+        "Knowledge Depth *",
+        [
+            "Basic / Entry-level knowledge",
+            "Applied technical / professional knowledge",
+            "Advanced specialized expertise",
+            "Recognized expert",
+            "World-class mastery / thought leader"
+        ]
+    )
+
+    influence = st.selectbox(
+        "Influence Level *",
+        [
+            "Internal team only",
+            "Internal cross-team",
+            "Internal multi-function",
+            "External vendors/clients",
+            "Influences industry-level practices"
+        ]
+    )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# ----------------------------------------------------------
+# BLOCK 3 — KNOWLEDGE, KPIs & SKILLS
+# ----------------------------------------------------------
+with colC:
+    st.markdown('<div class="card-block">', unsafe_allow_html=True)
+    st.markdown('<div class="card-title">Knowledge, KPIs & Competencies</div>', unsafe_allow_html=True)
+
+    education = st.selectbox(
+        "Education Level *",
+        [
+            "High School",
+            "Technical Degree",
+            "Bachelor’s",
+            "Post-graduate / Specialization",
+            "Master’s",
+            "Doctorate"
+        ]
+    )
+
+    experience = st.selectbox(
+        "Experience Level *",
+        [
+            "< 2 years",
+            "2–5 years",
+            "5–10 years",
+            "10–15 years",
+            "15+ years"
+        ]
+    )
+
+    kpis = st.multiselect(
+        "Primary KPIs * (select ≥1)",
+        ["Financial", "Customer", "Operational", "Quality", "Safety", "Compliance", "Project Delivery", "People Leadership"]
+    )
+
+    competencies = st.multiselect(
+        "Core Competencies * (select ≥1)",
+        ["Communication", "Collaboration", "Analytical Thinking", "Technical Expertise", "Leadership", "Innovation", "Strategic Thinking", "Customer Orientation"]
+    )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==========================================================
+# VALIDATION + TAGGING
+# ==========================================================
+def build_user_tags():
+    tags = set()
+
+    # Category
+    tags.update(job_category.lower().split())
+
+    # Geography
+    tags.update(geo_scope.lower().split())
+
+    # Org Impact (keywords)
+    tags.update(org_impact.lower().replace("/", " ").split())
+
+    # Span of control
+    tags.update(span_control.lower().split())
+
+    # Autonomy
+    tags.update(autonomy.lower().split())
+
+    # Problem solving
+    tags.update(problem_solving.lower().split())
+
+    # Knowledge depth
+    tags.update(knowledge_depth.lower().split())
+
+    # Influence
+    tags.update(influence.lower().split())
+
+    # Education mapping
+    edu_map = {
+        "High School": ["basic"],
+        "Technical Degree": ["technical"],
+        "Bachelor’s": ["bachelor", "degree"],
+        "Post-graduate / Specialization": ["advanced", "specialization"],
+        "Master’s": ["master"],
+        "Doctorate": ["phd", "doctorate"]
+    }
+    tags.update(edu_map.get(education, []))
+
+    # Experience mapping
+    exp_map = {
+        "< 2 years": ["junior"],
+        "2–5 years": ["intermediate"],
+        "5–10 years": ["senior"],
+        "10–15 years": ["expert"],
+        "15+ years": ["leader"]
+    }
+    tags.update(exp_map.get(experience, []))
+
+    # KPIs
+    for k in kpis:
+        tags.add(k.lower())
+
+    # competencies
+    for c in competencies:
+        tags.add(c.lower())
+
+    return tags
 
 
 # ==========================================================
-# SCORE PROFILES
+# BUTTON
 # ==========================================================
-flt = flt.copy()
-flt["score"] = flt.apply(lambda row: score_match(user_tags, row), axis=1)
+st.write("")
+generate = st.button("Generate Job Match Description", type="primary")
 
-best = flt.sort_values("score", ascending=False).iloc[0].to_dict()
-
-st.success(f"Cargo identificado: **{best['Job Profile']}** — GG {best['Global Grade']}")
 
 # ==========================================================
-# RENDER FINAL DESCRIPTION (LAYOUT PREMIUM)
+# RUN MATCH AFTER CLICK
 # ==========================================================
-components.html(
-    build_single_profile_html(best),
-    height=900,
-    scrolling=False
-)
+if generate:
+
+    # *** VALIDATION ***
+    if not kpis:
+        st.error("Please select at least one KPI.")
+        st.stop()
+
+    if not competencies:
+        st.error("Please select at least one competency.")
+        st.stop()
+
+    user_tags = build_user_tags()
+
+    flt = flt.copy()
+    flt["score"] = flt.apply(lambda r: score_match(user_tags, r), axis=1)
+
+    best = flt.sort_values("score", ascending=False).iloc[0].to_dict()
+
+    st.success(f"Matched Job Profile: **{best['Job Profile']}** (GG {best['Global Grade']})")
+
+    # Render full description
+    components.html(
+        build_single_profile_html(best),
+        height=900,
+        scrolling=False
+    )
