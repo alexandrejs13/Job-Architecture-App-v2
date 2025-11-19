@@ -348,7 +348,7 @@ import html
 import base64
 import os
 
-from match_engine import compute_job_match
+from match_engine import compute_match
 from html_renderer import render_job_match_description
 
 # ----------------------------------------------------------
@@ -735,7 +735,7 @@ if generate:
 
     else:
         # roda engine
-        match_result = compute_job_match(fields, df_profiles)
+        match_result = compute_match(fields, df_profiles)
 
         html_code = render_job_match_description(
             match_result,
