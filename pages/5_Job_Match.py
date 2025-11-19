@@ -625,204 +625,370 @@ if generate:
     score_pct = int((best["match_score"] / df_filtered["match_score"].max()) * 100)
 
 # ==========================================================
-# PARTE 4 — HTML FINAL + Correções
+# PARTE 4 — VALIDAÇÃO, BOTÃO E GERAÇÃO DA DESCRIÇÃO
 # ==========================================================
 
-# 🔵 CSS EXTRA PARA O BOTÃO AZUL LARGO
+import html
+import streamlit.components.v1 as components
+
+# --- CSS do botão azul sempre largo, sem quebra ---
 st.markdown("""
 <style>
-.stButton > button {
-    background-color: #145efc !important;
+/* botão principal sempre largo */
+.stButton > button[kind="secondary"], .stButton > button[kind="primary"], .stButton > button {
+    background: #2458ff !important;
     color: #ffffff !important;
+    border-radius: 14px !important;
     font-weight: 600 !important;
-    font-size: 18px !important;
-    padding-top: 14px !important;
-    padding-bottom: 14px !important;
-    padding-left: 32px !important;
-    padding-right: 32px !important;
-    border-radius: 10px !important;
-    width: 280px !important;
+    border: none !important;
+    padding: 0.75rem 1.6rem !important;
+    width: 100% !important;
+    max-width: 480px !important;
     white-space: nowrap !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
+# ----------------------------------------------------------
+# Ajuda: função bem defensiva para saber se campo está vazio
+# ----------------------------------------------------------
+def is_empty(value):
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip() == "" or value.strip().lower().startswith("choose option")
+    if isinstance(value, (list, tuple, set)):
+        return len(value) == 0
+    return False
 
 
-# ==========================================================
-# 🔥 FUNÇÃO QUE CONSTRÓI O HTML FINAL
-# ==========================================================
+# ----------------------------------------------------------
+# Coleta dos valores do formulário (usar exatamente os nomes
+# que você já usou nas variáveis dos selects / multiselects)
+# ----------------------------------------------------------
+user_inputs = {
+    "Job Family": job_family,
+    "Sub Job Family": sub_job_family,
+    "Job Category": job_category,
+    "Geographic Scope": geo_scope,
+    "Organizational Impact": org_impact,
+    "Span of Control": span_control,
+    "Autonomy Level": autonomy,
+    "Problem Solving Complexity": problem_solving,
+    "Knowledge Depth": knowledge_depth,
+    "Influence Level": influence,
+    "Education Level": education,
+    "Experience Level": experience,
+    "Primary KPIs": kpis,
+    "Core Competencies": competencies,
+    # aqui entram os 10 campos extras que você adicionou na etapa anterior;
+    # se alguns não existirem na planilha, não tem problema, a função de match trata isso com segurança.
+    "Financial Impact": financial_impact,
+    "Stakeholder Complexity": stakeholder_complexity,
+    "Decision Time Horizon": decision_time_horizon,
+    "Nature of Work": nature_of_work,
+    "Decision Type": decision_type,
+    "Operational Complexity": operational_complexity,
+    "Specialization Level": specialization_level,
+    "Innovation Responsibility": innovation_responsibility,
+    "Leadership Type": leadership_type,
+    "Organizational Influence": organizational_influence,
+}
 
-def build_html(job):
+# ----------------------------------------------------------
+# Descobrir quais campos obrigatórios estão vazios
+# (todos são obrigatórios, como você pediu)
+# ----------------------------------------------------------
+missing_fields = [label for label, value in user_inputs.items() if is_empty(value)]
 
-    sections = [
-        "Sub Job Family Description",
-        "Job Profile Description",
-        "Career Band Description",
-        "Role Description",
-        "Grade Differentiator",
-        "Qualifications",
-        "Specific parameters / KPIs",
-        "Competencies 1",
-        "Competencies 2",
-        "Competencies 3",
-    ]
+# ----------------------------------------------------------
+# Função de matching — opção A (regras, sem semântica)
+# ----------------------------------------------------------
+def compute_match(answers: dict, df_profiles: pd.DataFrame):
+    """
+    Retorna (best_row_dict, score_de_0_a_100)
+    Regra forte: filtra por Job Family / Sub Job Family / Career Path.
+    Dentro disso, calcula score por campos que existirem na planilha.
+    """
+
+    if df_profiles.empty:
+        return None, 0
+
+    # Filtro forte por Job Family / Sub Job Family (e Career Path se existir)
+    flt = df_profiles.copy()
+
+    if "Job Family" in flt.columns and not is_empty(answers.get("Job Family")):
+        flt = flt[flt["Job Family"] == answers["Job Family"]]
+
+    if "Sub Job Family" in flt.columns and not is_empty(answers.get("Sub Job Family")):
+        flt = flt[flt["Sub Job Family"] == answers["Sub Job Family"]]
+
+    if "Career Path" in flt.columns and not is_empty(career_path):
+        flt = flt[flt["Career Path"] == career_path]
+
+    # Se o filtro ficar vazio, volta para o df completo (mas isso é exceção)
+    if flt.empty:
+        flt = df_profiles.copy()
+
+    # pesos simples — você pode ajustar depois
+    weight_map = {
+        "Job Family": 10,
+        "Sub Job Family": 10,
+        "Job Category": 6,
+        "Geographic Scope": 6,
+        "Organizational Impact": 6,
+        "Span of Control": 6,
+        "Autonomy Level": 6,
+        "Problem Solving Complexity": 6,
+        "Knowledge Depth": 6,
+        "Influence Level": 6,
+        "Education Level": 4,
+        "Experience Level": 4,
+        "Financial Impact": 4,
+        "Stakeholder Complexity": 4,
+        "Decision Time Horizon": 4,
+        "Nature of Work": 4,
+        "Decision Type": 4,
+        "Operational Complexity": 4,
+        "Specialization Level": 4,
+        "Innovation Responsibility": 4,
+        "Leadership Type": 4,
+        "Organizational Influence": 4,
+    }
+
+    # campos tipo lista (KPIs / Competencies) contam interseção
+    list_fields = ["Primary KPIs", "Core Competencies"]
+
+    max_score = 0
+    best_row = None
+
+    for _, row in flt.iterrows():
+        score = 0
+        total_possible = 0
+
+        # campos simples
+        for col, w in weight_map.items():
+            if col in df_profiles.columns and not is_empty(answers.get(col)):
+                total_possible += w
+                if str(row.get(col, "")).strip() == str(answers[col]).strip():
+                    score += w
+
+        # campos lista (se existirem na planilha)
+        for col in list_fields:
+            if col in df_profiles.columns and not is_empty(answers.get(col)):
+                total_possible += 6  # peso total desse grupo
+                target_raw = str(row.get(col, "") or "")
+                # quebra por ; ou , para virar lista
+                targets = [t.strip() for t in target_raw.replace(";", ",").split(",") if t.strip()]
+                inter = set(answers[col]) & set(targets)
+                if targets:
+                    score += 6 * (len(inter) / len(set(targets)))
+
+        if total_possible == 0:
+            continue
+
+        norm_score = int(round(100 * score / total_possible))
+
+        if norm_score > max_score:
+            max_score = norm_score
+            best_row = row
+
+    if best_row is None:
+        return None, 0
+
+    return best_row.to_dict(), max_score
+
+
+# ----------------------------------------------------------
+# Builder do HTML — 100% igual ao da Job Profile Description
+# só que forçando 1 coluna, sem área de scroll fixa e fundo branco
+# ----------------------------------------------------------
+sections = [
+    "Sub Job Family Description",
+    "Job Profile Description",
+    "Career Band Description",
+    "Role Description",
+    "Grade Differentiator",
+    "Qualifications",
+    "Specific parameters / KPIs",
+    "Competencies 1",
+    "Competencies 2",
+    "Competencies 3",
+]
+
+
+def build_single_profile_html(profile_dict: dict, match_score: int):
+
+    # usamos o mesmo dicionário icons_svg já carregado na página de cima
+    job = html.escape(str(profile_dict.get("Job Profile", "")))
+    gg = html.escape(str(profile_dict.get("Global Grade", "")))
+    jf = html.escape(str(profile_dict.get("Job Family", "")))
+    sf = html.escape(str(profile_dict.get("Sub Job Family", "")))
+    cp = html.escape(str(profile_dict.get("Career Path", "")))
+    fc = html.escape(str(profile_dict.get("Full Job Code", "")))
 
     html_code = f"""
 <html>
 <head>
 <meta charset="UTF-8">
-
 <style>
-
 html, body {{
     margin: 0;
     padding: 0;
-    height: auto !important;
-    overflow: visible !important;
-    background: white !important;
     font-family: 'Segoe UI', sans-serif;
+    background: #ffffff;
 }}
 
 #viewport {{
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    background: white !important;
+    padding: 8px 0 24px 0;
 }}
 
-.grid-top {{
-    display: grid;
-    grid-template-columns: 1fr;
-    width: 100%;
-    gap: 24px;
-}}
-
-.grid-desc {{
-    display: grid;
-    grid-template-columns: 1fr;
-    width: 100%;
-    gap: 34px;
-    margin-top: 32px;
-}}
-
+/* Card de recomendação (igual Job Profile Description, mas com header de match) */
 .card-top {{
-    background: #ffffff !important;
+    background: #f5f3ee;
     border-radius: 16px;
-    padding: 22px 26px;
+    padding: 22px 24px;
     border: 1px solid #e3e1dd;
+    margin-bottom: 24px;
 }}
 
-.title {{
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.22;
-}}
-
-.gg {{
-    color: #145efc;
+.recommend-title {{
     font-size: 20px;
     font-weight: 700;
-    margin-top: 6px;
+    margin-bottom: 4px;
+}}
+
+.match-score {{
+    color: #145efc;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
 }}
 
 .meta {{
-    background: #ffffff !important;
-    padding: 14px 16px;
-    margin-top: 18px;
+    background: #ffffff;
+    padding: 14px;
+    margin-top: 6px;
     border-radius: 12px;
-    border: 1px solid #e8e6e1;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 14px;
 }}
 
+/* Seções em uma coluna */
 .section-box {{
-    background: white !important;
-    padding-bottom: 30px;
-    border-bottom: 1px solid #e6e4e1;
+    margin-bottom: 28px;
 }}
 
 .section-title {{
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
-    margin-bottom: 10px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
+}}
+
+.section-line {{
+    height: 1px;
+    background: #e8e6e1;
+    width: 100%;
+    margin: 8px 0 14px 0;
 }}
 
 .section-text {{
-    font-size: 16px;
-    line-height: 1.55;
+    font-size: 14px;
+    line-height: 1.45;
     white-space: pre-wrap;
 }}
 
 .icon-inline {{
-    width: 22px;
-    height: 22px;
-    display: inline-block;
+    width: 20px;
+    height: 20px;
 }}
 </style>
-
 </head>
 
 <body>
-
 <div id="viewport">
 
-    <div class="grid-top">
-        <div class="card-top">
-            <div class="title">{job['Job Profile']}</div>
-            <div class="gg">GG {job['Global Grade']}</div>
-
-            <div class="meta">
-                <b>Job Family:</b> {job['Job Family']}<br>
-                <b>Sub Job Family:</b> {job['Sub Job Family']}<br>
-                <b>Career Path:</b> {job['Career Path']}<br>
-                <b>Full Job Code:</b> {job['Full Job Code']}
-            </div>
+    <div class="card-top">
+        <div class="match-score">Match Score: {match_score}%</div>
+        <div class="recommend-title">{job}</div>
+        <div class="meta">
+            <b>Job Family:</b> {jf}<br>
+            <b>Sub Job Family:</b> {sf}<br>
+            <b>Career Path:</b> {cp}<br>
+            <b>Full Job Code:</b> {fc}
         </div>
     </div>
-
-    <div class="grid-desc">
 """
 
-    # 🔥 Construção das seções
     for sec in sections:
+        val = profile_dict.get(sec, "")
         icon = icons_svg.get(sec, "")
-        text = job.get(sec, "")
-
         html_code += f"""
-        <div class="section-box">
-            <div class="section-title">
-                <span class="icon-inline">{icon}</span>
-                {sec}
-            </div>
-            <div class="section-text">{text}</div>
+    <div class="section-box">
+        <div class="section-title">
+            <span class="icon-inline">{icon}</span>
+            {html.escape(sec)}
         </div>
-        """
+        <div class="section-line"></div>
+        <div class="section-text">{html.escape(str(val))}</div>
+    </div>
+"""
 
     html_code += """
-    </div>
-
 </div>
-
-</body></html>
+</body>
+</html>
 """
-
     return html_code
 
 
+# ----------------------------------------------------------
+# BOTÃO + LÓGICA (match_result inicializado para evitar NameError)
+# ----------------------------------------------------------
+match_result = None
+match_score = 0
 
-# ==========================================================
-# 🔥 RENDERIZAÇÃO FINAL (sem NameError)
-# ==========================================================
+# botão alinhado à esquerda embaixo da primeira coluna -> usar uma coluna "dummy"
+btn_col, _ = st.columns([1, 2])
+with btn_col:
+    generate = st.button("Generate Job Match Description")
 
-match_obj = locals().get("match_result", None)
+if generate:
+    if missing_fields:
+        # mensagem geral
+        st.markdown(
+            """
+<div style="
+    margin-top: 18px;
+    margin-bottom: 10px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: #fdeaea;
+    color: #b11d1d;
+    font-size: 15px;
+">
+Please fill in all required fields before generating the match.
+</div>
+""",
+            unsafe_allow_html=True,
+        )
 
-if isinstance(match_obj, dict):
-    components.html(
-        build_html(match_obj),
-        height=2600,
-        scrolling=False
-    )
+        # lista textual dos campos (mantive como fallback visual)
+        for f in missing_fields:
+            st.markdown(f"<span style='color:#e02424; font-weight:600;'>• {f}</span>", unsafe_allow_html=True)
+
+    else:
+        # faz o match usando a planilha Job Profile
+        match_result, match_score = compute_match(user_inputs, df)
+
+        if match_result:
+            # renderiza HTML em fundo branco, sem scroll fixo
+            components.html(
+                build_single_profile_html(match_result, match_score),
+                height=900,
+                scrolling=False,
+            )
+        else:
+            st.warning("No suitable Job Profile was found for the selected parameters.")
