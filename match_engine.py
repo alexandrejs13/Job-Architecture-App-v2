@@ -1,126 +1,95 @@
 # ==========================================================
-# match_engine.py — Engine de match determinístico
+# match_engine.py — Engine de Match do Job Match
 # ==========================================================
+
 import pandas as pd
-
-# ----------------------------------------------------------
-# CARREGAR PERFIS
-# ----------------------------------------------------------
-def load_profiles(path="data/Job Profile.xlsx"):
-    df = pd.read_excel(path)
-    df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
-    return df
+from difflib import SequenceMatcher
 
 
 # ----------------------------------------------------------
-# MAPEAMENTO DE PESO POR CAMPO → ajustado para FINANCE não virar SALES
-# Campos com correspondência exata valem mais
+# Função utilitária
 # ----------------------------------------------------------
-WEIGHTS = {
-    "job_family": 5,
-    "sub_job_family": 4,
-    "career_path": 3,
-    "job_category": 3,
-    "geographic_scope": 2,
-    "organizational_impact": 2,
-    "span_of_control": 3,
-    "nature_of_work": 2,
-    "financial_impact": 2,
-    "stakeholder_complexity": 2,
-    "decision_type": 2,
-    "decision_time_horizon": 1,
-    "autonomy_level": 3,
-    "problem_solving_complexity": 3,
-    "knowledge_depth": 2,
-    "operational_complexity": 2,
-    "influence_level": 2,
-    "education_level": 1,
-    "experience_level": 2,
-    "specialization_level": 1,
-    "innovation_responsibility": 1,
-    "leadership_type": 3,
-    "organizational_influence": 2,
-}
-
-# ----------------------------------------------------------
-# NORMALIZAÇÃO → remover acentos / caixa baixa
-# ----------------------------------------------------------
-import unicodedata
-
-def normalize(text):
-    if pd.isna(text):
-        return ""
-    text = str(text).strip().lower()
-    text = unicodedata.normalize("NFD", text)
-    return "".join(c for c in text if unicodedata.category(c) != "Mn")
+def ratio(a, b):
+    """Retorna similaridade entre duas strings."""
+    if not a or not b:
+        return 0
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 
 # ----------------------------------------------------------
-# MATCH DETERMINÍSTICO
+# Cálculo do score baseado nos campos do formulário
 # ----------------------------------------------------------
-def compute_job_match(user_inputs: dict, df_profiles: pd.DataFrame):
+def compute_job_match(form_inputs, df_profiles):
     """
-    user_inputs → dicionário com os 25 campos do formulário
-    df_profiles → dataframe carregado do arquivo Excel
+    form_inputs = dicionário com todos os campos preenchidos
+    df_profiles = dataframe do Job Profile.xlsx pré-processado
     """
 
-    df = df_profiles.copy()
-    df_norm = df.copy()
+    results = []
 
-    # normalizar perfis
-    for col in df_norm.columns:
-        df_norm[col] = df_norm[col].apply(normalize)
-
-    # normalizar entradas
-    user_norm = {k: normalize(v) for k, v in user_inputs.items()}
-
-    # score acumulado
-    scores = []
-
-    for idx, row in df_norm.iterrows():
+    for _, row in df_profiles.iterrows():
         score = 0
-        total_weight = 0
+        weight_total = 0
 
-        for field, weight in WEIGHTS.items():
-            if field not in user_norm:
-                continue
-
-            profile_value = row.get(field, "")
-            user_value = user_norm.get(field, "")
-
-            if user_value and profile_value and user_value == profile_value:
-                score += weight
-
-            total_weight += weight
-
-        if total_weight == 0:
-            final_score = 0
-        else:
-            final_score = round((score / total_weight) * 100, 2)
-
-        scores.append(final_score)
-
-    df["match_score"] = scores
-    best_row = df.sort_values("match_score", ascending=False).iloc[0]
-
-    return {
-        "match_score": float(best_row["match_score"]),
-        "job_profile": best_row["job_profile"],
-        "job_family": best_row["job_family"],
-        "sub_job_family": best_row["sub_job_family"],
-        "career_path": best_row["career_path"],
-        "global_grade": best_row["global_grade"],
-        "full_job_code": best_row["full_job_code"],
-        "sections": {
-            "Sub Job Family Description": best_row["sub_job_family_description"],
-            "Job Profile Description": best_row["job_profile_description"],
-            "Career Band Description": best_row["career_band_description"],
-            "Role Description": best_row["role_description"],
-            "Grade Differentiator": best_row["grade_differentiator"],
-            "Qualifications": best_row["qualifications"],
-            "Specific parameters / KPIs": best_row["specific_parameters_/_kpis"],
-            "Competencies 1": best_row["competencies_1"],
-            "Competencies 2": best_row["competencies_2"],
-            "Competencies 3": best_row["competencies_3"],
+        # --------------------- PESOS -----------------------
+        WEIGHTS = {
+            "job_family": 25,
+            "sub_job_family": 25,
+            "job_category": 8,
+            "geo_scope": 8,
+            "org_impact": 8,
+            "autonomy": 6,
+            "knowledge_depth": 6,
+            "operational_complexity": 6,
+            "experience": 5,
+            "education": 5,
         }
-    }
+
+        # --------------------------------------------------
+        # JOB FAMILY MATCH (peso pesado)
+        # --------------------------------------------------
+        score += WEIGHTS["job_family"] * ratio(
+            form_inputs["job_family"], row.get("job_family", "")
+        )
+        weight_total += WEIGHTS["job_family"]
+
+        # --------------------------------------------------
+        # SUB JOB FAMILY MATCH (peso pesado)
+        # --------------------------------------------------
+        score += WEIGHTS["sub_job_family"] * ratio(
+            form_inputs["sub_job_family"], row.get("sub_job_family", "")
+        )
+        weight_total += WEIGHTS["sub_job_family"]
+
+        # --------------------------------------------------
+        # CAMPOS WTW — match parcial por similaridade
+        # --------------------------------------------------
+        for k_form, k_df, w in [
+            ("job_category", "job_category", WEIGHTS["job_category"]),
+            ("geo_scope", "geo_scope", WEIGHTS["geo_scope"]),
+            ("org_impact", "org_impact", WEIGHTS["org_impact"]),
+            ("autonomy", "autonomy", WEIGHTS["autonomy"]),
+            ("knowledge_depth", "knowledge_depth", WEIGHTS["knowledge_depth"]),
+            ("operational_complexity", "operational_complexity", WEIGHTS["operational_complexity"]),
+            ("experience", "experience", WEIGHTS["experience"]),
+            ("education", "education", WEIGHTS["education"]),
+        ]:
+            score += w * ratio(form_inputs[k_form], row.get(k_df, ""))
+            weight_total += w
+
+        # --------------------------------------------------
+        final_score = (score / weight_total) * 100
+
+        results.append({
+            "job_title": row.get("job_title", ""),
+            "gg": row.get("gg", ""),
+            "job_family": row.get("job_family", ""),
+            "sub_job_family": row.get("sub_job_family", ""),
+            "career_path": row.get("career_path", ""),
+            "full_job_code": row.get("full_job_code", ""),
+            "final_score": final_score,
+            "row": row
+        })
+
+    results = sorted(results, key=lambda x: x["final_score"], reverse=True)
+    return results[0] if results else None
