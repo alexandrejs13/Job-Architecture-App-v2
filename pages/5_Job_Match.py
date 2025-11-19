@@ -1,374 +1,298 @@
 # ==========================================================
-# PAGE 5 — JOB MATCH
+# 5_Job_Match.py — Página completa
 # ==========================================================
-
 import streamlit as st
 import pandas as pd
 import base64
 import os
+import html
 
-from match_engine import compute_match
-from html_renderer import render_job_match_description
-
+from match_engine import compute_job_match, load_profiles
+from html_renderer import render_description
 
 # ----------------------------------------------------------
 # PAGE CONFIG
 # ----------------------------------------------------------
 st.set_page_config(page_title="Job Match", layout="wide")
 
-
 # ----------------------------------------------------------
-# GLOBAL CSS — SIG padrão
+# CSS GLOBAL
 # ----------------------------------------------------------
 st.markdown("""
 <style>
 
-    .main > div {
-        max-width: 1400px;
-        margin-left: auto;
-        margin-right: auto;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
+.main > div {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
 
-    .section-title {
-        font-size: 22px;
-        font-weight: 700;
-        margin-top: 32px;
-        margin-bottom: 4px;
-    }
+.section-title-h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0;
+    padding: 0;
+}
 
-    .divider-line {
-        height: 1px;
-        background: #d9d4cd;
-        margin-bottom: 18px;
-    }
+.label-required {
+    color: #c62828 !important;
+    font-weight: 700;
+}
 
-    /* BOTÃO AZUL */
-    .blue-btn > button {
-        background-color: #145efc !important;
-        color: white !important;
-        font-size: 18px !important;
-        padding: 14px 28px !important;
-        border-radius: 10px !important;
-        width: 420px !important;
-        border: none !important;
-        justify-content: flex-start !important;
-        text-align: left !important;
-    }
+.selectbox-error > div:first-child {
+    border: 2px solid #c62828 !important;
+}
 
-    /* LABEL DE ERRO */
-    .error-label {
-        color: #d90429 !important;
-        font-weight: 700;
-        font-size: 15px !important;
-        margin-bottom: 4px;
-        display: block;
-    }
+.generate-btn {
+    background: #145efc !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 14px 22px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    border: none !important;
+}
 
-    /* BORDA VERMELHA */
-    .error-border select,
-    .error-border input,
-    .error-border div[data-baseweb="select"] {
-        border: 2px solid #d90429 !important;
-        border-radius: 6px !important;
-    }
-
-    /* MENSAGEM DE ERRO */
-    .error-box {
-        background: #fdecec;
-        border-left: 6px solid #e63946;
-        padding: 16px;
-        border-radius: 8px;
-        font-size: 17px;
-        margin-top: 18px;
-        color: #9d1c1c;
-    }
+.success-card {
+    background: #f5f3ee;
+    padding: 26px;
+    border-radius: 18px;
+    border: 1px solid #e3e1dd;
+}
 
 </style>
 """, unsafe_allow_html=True)
 
-
-
 # ----------------------------------------------------------
-# LOAD & NORMALIZE DATA
-# ----------------------------------------------------------
-@st.cache_data
-def load_profiles():
-    df = pd.read_excel("data/Job Profile.xlsx")
-
-    # normalização necessária
-    df.columns = (
-        df.columns
-        .str.strip()
-        .str.lower()
-        .str.replace(" ", "_")
-        .str.replace("/", "_")
-    )
-
-    return df
-
-df_profiles = load_profiles()
-
-
-
-# ----------------------------------------------------------
-# TÍTULO DA PÁGINA
+# HEADER
 # ----------------------------------------------------------
 st.markdown("""
-<h1 style="font-size:36px; font-weight:700; margin-top:10px; margin-bottom:0;">
-    Job Match
-</h1>
-<hr style="margin-top:14px; margin-bottom:36px;">
+<div style="display:flex; align-items:center; gap:16px; margin-top:12px;">
+    <img src="https://cdn-icons-png.flaticon.com/512/992/992651.png" width="48">
+    <h1 class="section-title-h1">Job Match</h1>
+</div>
+<hr>
 """, unsafe_allow_html=True)
 
-
-
-# ==========================================================
-# FUNÇÃO PARA LABELS COM ERRO
-# ==========================================================
-def label_html(label, error_list):
-    if label in error_list:
-        return f"<span class='error-label'>{label}</span>"
-    return f"<span>{label}</span>"
-
-
-missing_fields_display = []
-
-
-# ==========================================================
-# FORMULÁRIO COMPLETO
-# ==========================================================
-
+# ----------------------------------------------------------
+# LOAD PROFILES
+# ----------------------------------------------------------
+df_profiles = load_profiles()
 
 # ----------------------------------------------------------
-# JOB FAMILY INFORMATION
+# FORM FIELDS
 # ----------------------------------------------------------
-st.markdown("<div class='section-title'>Job Family Information</div><div class='divider-line'></div>",
-            unsafe_allow_html=True)
+form_values = {}
+errors = []
 
-cjf1, cjf2 = st.columns(2)
+def field(label, options, col, key):
+    global form_values, errors
 
-job_families = sorted(df_profiles["job_family"].dropna().unique().tolist())
+    with col:
+        missing = st.session_state.get(f"err_{key}", False)
+        class_add = "selectbox-error" if missing else ""
 
-with cjf1:
-    st.markdown(label_html("Job Family", missing_fields_display), unsafe_allow_html=True)
-    job_family = st.selectbox("",
-                              ["Choose option"] + job_families,
-                              key="jf")
+        if missing:
+            st.markdown(f"<div class='label-required'>{label}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(label)
 
-with cjf2:
-    st.markdown(label_html("Sub Job Family", missing_fields_display), unsafe_allow_html=True)
-
-    if job_family == "Choose option":
-        sub_job_family = st.selectbox("", ["Choose option"], key="subjf")
-    else:
-        sub_list = (
-            df_profiles[df_profiles["job_family"] == job_family]["sub_job_family"]
-            .dropna().unique().tolist()
+        val = st.selectbox(
+            "",
+            ["Choose option"] + options,
+            key=key,
+            label_visibility="collapsed",
+            help="",
+            placeholder="Choose option",
         )
-        sub_job_family = st.selectbox("",
-                                      ["Choose option"] + sorted(sub_list),
-                                      key="subjf")
+
+        form_values[key] = val
+        return val
 
 
 # ----------------------------------------------------------
-# SECTION 1 — STRATEGIC IMPACT & SCOPE
+# BUILD UI FORM
 # ----------------------------------------------------------
-st.markdown("<div class='section-title'>Strategic Impact & Scope</div><div class='divider-line'></div>",
-            unsafe_allow_html=True)
+st.markdown("### Job Family Information")
+st.divider()
 
-c1a, c1b, c1c = st.columns(3)
+c1, c2 = st.columns(2)
 
-with c1a:
-    st.markdown(label_html("Job Category", missing_fields_display), unsafe_allow_html=True)
-    job_category = st.selectbox("", ["Choose option", "Executive", "Manager", "Professional",
-                                     "Technical Support", "Business Support", "Production"])
+job_fam_list = sorted(df_profiles["job_family"].dropna().unique().tolist())
 
-    st.markdown(label_html("Geographic Scope", missing_fields_display), unsafe_allow_html=True)
-    geo_scope = st.selectbox("", ["Choose option", "Local", "Regional", "Multi-country", "Global"])
+job_family = field("Job Family", job_fam_list, c1, "job_family")
 
-    st.markdown(label_html("Organizational Impact", missing_fields_display), unsafe_allow_html=True)
-    org_impact = st.selectbox("", ["Choose option", "Team", "Department / Subfunction",
-                                   "Function", "Business Unit", "Enterprise-wide"])
-
-with c1b:
-    st.markdown(label_html("Span of Control", missing_fields_display), unsafe_allow_html=True)
-    span_control = st.selectbox("", ["Choose option", "No direct reports", "Supervises team",
-                                     "Leads professionals", "Leads multiple teams", "Leads managers"])
-
-    st.markdown(label_html("Nature of Work", missing_fields_display), unsafe_allow_html=True)
-    nature_work = st.selectbox("", ["Choose option", "Process-oriented", "Analysis-oriented",
-                                    "Specialist", "Leadership-driven"])
-
-    st.markdown(label_html("Financial Impact", missing_fields_display), unsafe_allow_html=True)
-    financial_impact = st.selectbox("", ["Choose option", "No impact", "Cost center impact",
-                                         "Department-level impact", "Business Unit impact",
-                                         "Company-wide impact"])
-
-with c1c:
-    st.markdown(label_html("Stakeholder Complexity", missing_fields_display), unsafe_allow_html=True)
-    stakeholder_complexity = st.selectbox("", ["Choose option", "Internal team", "Cross-functional",
-                                               "External vendors", "Customers", "Regulatory/Authorities"])
-
-    st.markdown(label_html("Decision Type", missing_fields_display), unsafe_allow_html=True)
-    decision_type = st.selectbox("", ["Choose option", "Procedural", "Operational", "Tactical", "Strategic"])
-
-    st.markdown(label_html("Decision Time Horizon", missing_fields_display), unsafe_allow_html=True)
-    decision_horizon = st.selectbox("", ["Choose option", "Daily", "Weekly", "Monthly", "Annual", "Multi-year"])
-
+if job_family == "Choose option":
+    sub_job_family = field("Sub Job Family", [], c2, "sub_job_family")
+else:
+    sub_list = sorted(df_profiles[df_profiles["job_family"] == job_family]["sub_job_family"].dropna().unique().tolist())
+    sub_job_family = field("Sub Job Family", sub_list, c2, "sub_job_family")
 
 
 # ----------------------------------------------------------
-# SECTION 2 — AUTONOMY & COMPLEXITY
+# Strategic
 # ----------------------------------------------------------
-st.markdown("<div class='section-title'>Autonomy & Complexity</div><div class='divider-line'></div>",
-            unsafe_allow_html=True)
+st.markdown("### Strategic Impact & Scope")
+st.divider()
 
-c2a, c2b, c2c = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-with c2a:
-    st.markdown(label_html("Autonomy Level", missing_fields_display), unsafe_allow_html=True)
-    autonomy = st.selectbox("", ["Choose option", "Close supervision", "Regular guidance",
-                                 "Independent", "Sets direction for others", "Defines strategy"])
+job_category = field("Job Category", 
+    ["Executive","Manager","Professional","Technical Support","Business Support","Production"],
+    c1, "job_category"
+)
 
-    st.markdown(label_html("Problem Solving Complexity", missing_fields_display), unsafe_allow_html=True)
-    problem_solving = st.selectbox("", ["Choose option", "Routine/Standardized", "Moderate",
-                                        "Complex", "Ambiguous/Novel", "Organization-level"])
+geographic_scope = field("Geographic Scope",
+    ["Local","Regional","Multi-country","Global"],
+    c1, "geographic_scope"
+)
 
-with c2b:
-    st.markdown(label_html("Knowledge Depth", missing_fields_display), unsafe_allow_html=True)
-    knowledge_depth = st.selectbox("", ["Choose option", "Entry-level knowledge", "Applied knowledge",
-                                        "Advanced expertise", "Recognized expert", "Thought leader"])
+organizational_impact = field("Organizational Impact",
+    ["Team","Department / Subfunction","Function","Business Unit","Enterprise-wide"],
+    c1, "organizational_impact"
+)
 
-    st.markdown(label_html("Operational Complexity", missing_fields_display), unsafe_allow_html=True)
-    operational_complexity = st.selectbox("", ["Choose option", "Stable operations", "Some variability",
-                                               "Complex operations", "High-variability environment"])
+span_control = field("Span of Control",
+    ["No direct reports","Supervises team","Leads professionals","Leads multiple teams","Leads managers"],
+    c2, "span_of_control"
+)
 
-with c2c:
-    st.markdown(label_html("Influence Level", missing_fields_display), unsafe_allow_html=True)
-    influence_level = st.selectbox("", ["Choose option", "Team", "Cross-team", "Multi-function",
-                                        "External vendors/clients", "Industry-level influence"])
+nature_work = field("Nature of Work",
+    ["Process-oriented","Analysis-oriented","Specialist","Leadership-driven"],
+    c2, "nature_of_work"
+)
 
+financial_impact = field("Financial Impact",
+    ["No impact","Cost center impact","Department-level impact","Business Unit impact","Company-wide impact"],
+    c2, "financial_impact"
+)
 
+stakeholder_complexity = field("Stakeholder Complexity",
+    ["Internal team","Cross-functional","External vendors","Customers","Regulatory/Authorities"],
+    c3, "stakeholder_complexity"
+)
 
-# ----------------------------------------------------------
-# SECTION 3 — KNOWLEDGE, KPIs & COMPETENCIES
-# ----------------------------------------------------------
-st.markdown("<div class='section-title'>Knowledge, KPIs & Competencies</div><div class='divider-line'></div>",
-            unsafe_allow_html=True)
+decision_type = field("Decision Type",
+    ["Procedural","Operational","Tactical","Strategic"],
+    c3, "decision_type"
+)
 
-c3a, c3b, c3c = st.columns(3)
-
-with c3a:
-    st.markdown(label_html("Education Level", missing_fields_display), unsafe_allow_html=True)
-    education = st.selectbox("", ["Choose option", "High School", "Technical Degree", "Bachelor’s",
-                                  "Post-graduate", "Master’s", "Doctorate"])
-
-    st.markdown(label_html("Experience Level", missing_fields_display), unsafe_allow_html=True)
-    experience = st.selectbox("", ["Choose option", "< 2 years", "2–5 years", "5–10 years",
-                                   "10–15 years", "15+ years"])
-
-with c3b:
-    st.markdown(label_html("Primary KPIs", missing_fields_display), unsafe_allow_html=True)
-    kpis_selected = st.multiselect("", ["Financial", "Customer", "Operational", "Quality", "Safety",
-                                        "Compliance", "Project Delivery", "People Leadership"])
-
-    st.markdown(label_html("Specialization Level", missing_fields_display), unsafe_allow_html=True)
-    specialization_level = st.selectbox("", ["Choose option", "Generalist", "Specialist", "Deep Specialist"])
-
-with c3c:
-    st.markdown(label_html("Core Competencies", missing_fields_display), unsafe_allow_html=True)
-    competencies_selected = st.multiselect("", ["Communication", "Collaboration", "Analytical Thinking",
-                                                "Technical Expertise", "Leadership", "Innovation",
-                                                "Strategic Thinking", "Customer Orientation"])
-
-    st.markdown(label_html("Innovation Responsibility", missing_fields_display), unsafe_allow_html=True)
-    innovation_resp = st.selectbox("", ["Choose option", "Execution", "Incremental improvements",
-                                        "Major improvements", "Innovation leadership"])
-
-c3d, c3e = st.columns(2)
-
-with c3d:
-    st.markdown(label_html("Leadership Type", missing_fields_display), unsafe_allow_html=True)
-    leadership_type = st.selectbox("", ["Choose option", "None", "Team Lead", "Supervisor",
-                                        "Manager", "Senior Manager", "Director"])
-
-with c3e:
-    st.markdown(label_html("Organizational Influence", missing_fields_display), unsafe_allow_html=True)
-    org_influence = st.selectbox("", ["Choose option", "Team", "Department",
-                                      "Business Unit", "Function", "Enterprise-wide"])
-
+decision_horizon = field("Decision Time Horizon",
+    ["Daily","Weekly","Monthly","Annual","Multi-year"],
+    c3, "decision_horizon"
+)
 
 
 # ----------------------------------------------------------
-# BOTÃO — ALINHADO À ESQUERDA
+# AUTONOMY
 # ----------------------------------------------------------
-btn_col, _, _ = st.columns([2, 5, 1])
+st.markdown("### Autonomy & Complexity")
+st.divider()
 
+c1, c2, c3 = st.columns(3)
+
+autonomy = field("Autonomy Level",
+    ["Close supervision","Regular guidance","Independent","Sets direction for others","Defines strategy"],
+    c1, "autonomy_level"
+)
+
+problem_solving = field("Problem Solving Complexity",
+    ["Routine/Standardized","Moderate","Complex","Ambiguous/Novel","Organization-level"],
+    c1, "problem_solving_complexity"
+)
+
+knowledge_depth = field("Knowledge Depth",
+    ["Entry-level knowledge","Applied knowledge","Advanced expertise","Recognized expert","Thought leader"],
+    c2, "knowledge_depth"
+)
+
+operational_complexity = field("Operational Complexity",
+    ["Stable operations","Some variability","Complex operations","High-variability environment"],
+    c2, "operational_complexity"
+)
+
+influence_level = field("Influence Level",
+    ["Team","Cross-team","Multi-function","External vendors/clients","Industry-level influence"],
+    c3, "influence_level"
+)
+
+
+# ----------------------------------------------------------
+# Knowledge
+# ----------------------------------------------------------
+st.markdown("### Knowledge, KPIs & Competencies")
+st.divider()
+
+c1, c2, c3 = st.columns(3)
+
+education = field("Education Level",
+    ["High School","Technical Degree","Bachelor’s","Post-graduate","Master’s","Doctorate"],
+    c1, "education_level"
+)
+
+experience = field("Experience Level",
+    ["< 2 years","2–5 years","5–10 years","10–15 years","15+ years"],
+    c1, "experience_level"
+)
+
+specialization = field("Specialization Level",
+    ["Generalist","Specialist","Deep Specialist"],
+    c2, "specialization_level"
+)
+
+innovation_resp = field("Innovation Responsibility",
+    ["Execution","Incremental improvements","Major improvements","Innovation leadership"],
+    c2, "innovation_responsibility"
+)
+
+leadership_type = field("Leadership Type",
+    ["None","Team Lead","Supervisor","Manager","Senior Manager","Director"],
+    c3, "leadership_type"
+)
+
+org_influence = field("Organizational Influence",
+    ["Team","Department","Business Unit","Function","Enterprise-wide"],
+    c3, "organizational_influence"
+)
+
+
+# ----------------------------------------------------------
+# BUTTON
+# ----------------------------------------------------------
+st.markdown("<br>", unsafe_allow_html=True)
+
+btn_col = st.columns([1,6,1])[0]
 with btn_col:
-    generate = st.button("Generate Job Match Description",
-                         key="btn_generate")
-    st.markdown("<div class='blue-btn'></div>", unsafe_allow_html=True)
+    generate = st.button("Generate Job Match Description", type="primary", use_container_width=False)
 
 
-
-# ==========================================================
-# VALIDATION + MATCH ENGINE CALL
-# ==========================================================
-
-fields_dict = {
-    "Job Family": job_family,
-    "Sub Job Family": sub_job_family,
-    "Job Category": job_category,
-    "Geographic Scope": geo_scope,
-    "Organizational Impact": org_impact,
-    "Span of Control": span_control,
-    "Nature of Work": nature_work,
-    "Financial Impact": financial_impact,
-    "Stakeholder Complexity": stakeholder_complexity,
-    "Decision Type": decision_type,
-    "Decision Time Horizon": decision_horizon,
-    "Autonomy Level": autonomy,
-    "Problem Solving Complexity": problem_solving,
-    "Knowledge Depth": knowledge_depth,
-    "Operational Complexity": operational_complexity,
-    "Influence Level": influence_level,
-    "Education Level": education,
-    "Experience Level": experience,
-    "Specialization Level": specialization_level,
-    "Innovation Responsibility": innovation_resp,
-    "Leadership Type": leadership_type,
-    "Organizational Influence": org_influence,
-}
-
-multi_required = {
-    "Primary KPIs": kpis_selected,
-    "Core Competencies": competencies_selected
-}
-
-missing = []
-
-for k, v in fields_dict.items():
-    if v == "Choose option":
-        missing.append(k)
-
-for k, v in multi_required.items():
-    if not v:
-        missing.append(k)
-
-
+# ----------------------------------------------------------
+# VALIDATE
+# ----------------------------------------------------------
 if generate:
+    missing_any = False
 
-    if missing:
-        st.markdown("<div class='error-box'>Please fill all required fields.</div>", unsafe_allow_html=True)
+    for key, value in form_values.items():
+        if value == "Choose option":
+            st.session_state[f"err_{key}"] = True
+            missing_any = True
+        else:
+            st.session_state[f"err_{key}"] = False
 
-        for m in missing:
-            st.markdown(f"<span class='error-label'>{m} is required.</span>", unsafe_allow_html=True)
+    if missing_any:
+        st.error("Please fill all required fields.")
+        st.stop()
 
-    else:
-        result, _ = compute_match(fields_dict, df_profiles)
+    # ----------------------------------------
+    # COMPUTE MATCH
+    # ----------------------------------------
+    match = compute_job_match(form_values, df_profiles)
 
-        html_out = render_job_match_description(result, df_profiles)
+    # ----------------------------------------
+    # RENDER HTML
+    # ----------------------------------------
+    html_result = render_description(match)
 
-        st.markdown(html_out, unsafe_allow_html=True)
+    st.components.v1.html(html_result, height=1500, scrolling=False)
