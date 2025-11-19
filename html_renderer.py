@@ -40,26 +40,10 @@ SECTIONS_ORDER = [
     "Competencies 3",
 ]
 
-
-def render_job_description(best_match_row: pd.Series, final_score: float) -> str:
-    """
-    Recebe uma linha do df_profiles (pandas.Series) e o score final
-    e devolve o HTML com o mesmo layout base da página Job Profile Description,
-    porém em UMA coluna.
-    """
-
-    # Campos de cabeçalho
-    job_title = html.escape(str(best_match_row.get("Job Profile", "")))
-    gg = html.escape(str(best_match_row.get("Global Grade", "")))
-    jf = html.escape(str(best_match_row.get("Job Family", "")))
-    sf = html.escape(str(best_match_row.get("Sub Job Family", "")))
-    cp = html.escape(str(best_match_row.get("Career Path", "")))
-    fc = html.escape(str(best_match_row.get("Full Job Code", "")))
-
-    # Montagem do HTML
-    out = []
-
-    out.append("""
+# ---------------------------------------------------------
+# CSS padronizado para ambos os renderers
+# ---------------------------------------------------------
+BASE_CSS = """
 <style>
 .job-match-wrapper {
     background: #ffffff;
@@ -138,12 +122,24 @@ def render_job_description(best_match_row: pd.Series, final_score: float) -> str
     white-space: pre-wrap;
 }
 </style>
-""")
+"""
 
+
+# ---------------------------------------------------------
+# RENDERER ORIGINAL (Job Profile Description)
+# ---------------------------------------------------------
+def render_job_description(best_match_row: pd.Series, final_score: float) -> str:
+    job_title = html.escape(str(best_match_row.get("Job Profile", "")))
+    gg = html.escape(str(best_match_row.get("Global Grade", "")))
+    jf = html.escape(str(best_match_row.get("Job Family", "")))
+    sf = html.escape(str(best_match_row.get("Sub Job Family", "")))
+    cp = html.escape(str(best_match_row.get("Career Path", "")))
+    fc = html.escape(str(best_match_row.get("Full Job Code", "")))
+
+    out = [BASE_CSS]
     out.append('<div class="job-match-wrapper">')
 
-    # Card do topo
-    out.append("""
+    out.append(f"""
     <div class="job-match-card">
         <div class="job-title">{job_title}</div>
         <div class="job-gg">GG {gg}</div>
@@ -155,9 +151,8 @@ def render_job_description(best_match_row: pd.Series, final_score: float) -> str
             <b>Full Job Code:</b> {fc}
         </div>
     </div>
-    """.format(job_title=job_title, gg=gg, jf=jf, sf=sf, cp=cp, fc=fc))
+    """)
 
-    # Seções
     out.append('<div class="job-sections">')
 
     for sec in SECTIONS_ORDER:
@@ -176,7 +171,66 @@ def render_job_description(best_match_row: pd.Series, final_score: float) -> str
         </div>
         """)
 
-    out.append("</div>")  # job-sections
-    out.append("</div>")  # job-match-wrapper
+    out.append("</div></div>")
+    return "\n".join(out)
 
+
+# ---------------------------------------------------------
+# NOVO RENDERER — Job Match Description (idêntico + MATCH %)
+# ---------------------------------------------------------
+def render_job_match_description(best_match_row: pd.Series, final_score: float) -> str:
+    """
+    Idêntico ao layout do Job Profile Description, porém adiciona:
+    ✔ GG • Match XX%
+    """
+    job_title = html.escape(str(best_match_row.get("Job Profile", "")))
+    gg = html.escape(str(best_match_row.get("Global Grade", "")))
+    score_txt = f"{final_score:.0f}%"
+
+    jf = html.escape(str(best_match_row.get("Job Family", "")))
+    sf = html.escape(str(best_match_row.get("Sub Job Family", "")))
+    cp = html.escape(str(best_match_row.get("Career Path", "")))
+    fc = html.escape(str(best_match_row.get("Full Job Code", "")))
+
+    out = [BASE_CSS]
+    out.append('<div class="job-match-wrapper">')
+
+    # ------------------ TOPO COM MATCH ------------------
+    out.append(f"""
+    <div class="job-match-card">
+        <div class="job-title">{job_title}</div>
+
+        <div class="job-gg">
+            GG {gg} • Match {score_txt}
+        </div>
+
+        <div class="job-meta">
+            <b>Job Family:</b> {jf}<br>
+            <b>Sub Job Family:</b> {sf}<br>
+            <b>Career Path:</b> {cp}<br>
+            <b>Full Job Code:</b> {fc}
+        </div>
+    </div>
+    """)
+
+    # ------------------ SEÇÕES ------------------
+    out.append('<div class="job-sections">')
+
+    for sec in SECTIONS_ORDER:
+        raw_val = best_match_row.get(sec, "")
+        text_val = html.escape("" if pd.isna(raw_val) else str(raw_val))
+        icon_svg = ICONS_SVG.get(sec, "")
+
+        out.append(f"""
+        <div class="section-box">
+            <div class="section-title">
+                <span class="section-icon">{icon_svg}</span>
+                {html.escape(sec)}
+            </div>
+            <div class="section-line"></div>
+            <div class="section-text">{text_val}</div>
+        </div>
+        """)
+
+    out.append("</div></div>")
     return "\n".join(out)
