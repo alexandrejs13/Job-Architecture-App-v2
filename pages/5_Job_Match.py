@@ -12,6 +12,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Job Match", layout="wide")
 
+
 # ----------------------------------------------------------
 # LOAD ICON
 # ----------------------------------------------------------
@@ -21,11 +22,13 @@ def load_icon_png(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
+
 icon_path = "assets/icons/checkmark_success.png"
 icon_b64 = load_icon_png(icon_path)
 
+
 # ----------------------------------------------------------
-# HEADER (SIG standard)
+# HEADER
 # ----------------------------------------------------------
 st.markdown(f"""
 <div style="
@@ -49,6 +52,7 @@ st.markdown(f"""
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
 
+
 # ==========================================================
 # GLOBAL LAYOUT — SIG WIDTH CONTROL (FULL VERSION)
 # ==========================================================
@@ -64,21 +68,19 @@ st.markdown("""
         padding-right: 20px;
     }
 
-    /* Dataframes */
     .stDataFrame {
         max-width: 1400px;
         margin-left: auto;
         margin-right: auto;
     }
 
-    /* Block container */
     .block-container, .stColumn {
         max-width: 1400px !important;
         margin-left: auto !important;
         margin-right: auto !important;
     }
 
-    /* Cards */
+    /* Card style */
     .card-block {
         background: #f8f7f5;
         padding: 20px 22px;
@@ -97,6 +99,25 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
+# ==========================================================
+# FIX EMPTY LABELS OUTSIDE CARDS (STREAMLIT HACK)
+# ==========================================================
+st.markdown("""
+<style>
+    /* Hide empty labels Streamlit generates */
+    .stSelectbox > label {
+        display: none !important;
+    }
+
+    /* Reduce spacing on selects */
+    .stSelectbox {
+        margin-top: -6px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 # ==========================================================
 # LOAD JOB PROFILE DATA
 # ==========================================================
@@ -104,10 +125,12 @@ st.markdown("""
 def load_profiles():
     return pd.read_excel("data/Job Profile.xlsx")
 
+
 df = load_profiles()
 
+
 # ==========================================================
-# LOAD SVG ICONS
+# LOAD ICONS (SVG)
 # ==========================================================
 def load_svg(svg_name):
     path = f"assets/icons/sig/{svg_name}"
@@ -115,6 +138,7 @@ def load_svg(svg_name):
         return ""
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
+
 
 icons_svg = {
     "Sub Job Family Description": load_svg("Hierarchy.svg"),
@@ -129,6 +153,7 @@ icons_svg = {
     "Competencies 3": load_svg("Setting_Cog.svg"),
 }
 
+
 sections = [
     "Sub Job Family Description",
     "Job Profile Description",
@@ -142,8 +167,9 @@ sections = [
     "Competencies 3",
 ]
 
+
 # ==========================================================
-# DESCRIPTION LAYOUT (PREMIUM, 1 COLUMN)
+# DESCRIPTION LAYOUT (PREMIUM — 1 COLUMN)
 # ==========================================================
 def build_single_profile_html(p):
 
@@ -160,8 +186,11 @@ def build_single_profile_html(p):
 <meta charset="UTF-8">
 
 <style>
+
 html, body {{
-    margin: 0; padding: 0; height: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
     overflow: hidden;
     font-family: 'Segoe UI', sans-serif;
 }}
@@ -235,6 +264,7 @@ html, body {{
     width: 20px;
     height: 20px;
 }}
+
 </style>
 
 </head>
@@ -283,8 +313,9 @@ html, body {{
     return html_code
 
 
+
 # ==========================================================
-# MATCH ENGINE (TAGGING + WEIGHTED SCORING)
+# MATCH ENGINE
 # ==========================================================
 def clean_text(t):
     if pd.isna(t): return ""
@@ -292,10 +323,13 @@ def clean_text(t):
     t = re.sub(r"[^a-z0-9\s]", " ", t)
     return t
 
+
 def extract_keywords(text):
     return set(clean_text(text).split())
 
+
 def score_match(user_tags, row):
+
     weights = {
         "Grade Differentiator": 25,
         "Qualifications": 20,
@@ -307,175 +341,183 @@ def score_match(user_tags, row):
         "Role Description": 3,
         "Career Band Description": 2,
     }
+
     score = 0
+
     for col, w in weights.items():
         kw = extract_keywords(row.get(col, ""))
         overlap = len(user_tags.intersection(kw))
         score += overlap * w
+
     return score
 
 
+
 # ==========================================================
-# START FORM
+# USER INPUT — FAMILY + SUBFAMILY
 # ==========================================================
 st.subheader("Job Family Information")
 
 c1, c2 = st.columns(2)
+
 with c1:
-    family = st.selectbox("Job Family *", sorted(df["Job Family"].dropna().unique()))
+    family = st.selectbox("Job Family", sorted(df["Job Family"].dropna().unique()))
+
 with c2:
     sublist = df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()
-    subfamily = st.selectbox("Sub Job Family *", sorted(sublist))
+    subfamily = st.selectbox("Sub Job Family", sorted(sublist))
 
 flt = df[(df["Job Family"] == family) & (df["Sub Job Family"] == subfamily)]
 
 if flt.empty:
     st.stop()
 
-# ==========================================================
-# 3 COLUMN LAYOUT WITH CARDS (CORRECTED)
-# ==========================================================
-colA, colB, colC = st.columns(3)
-
-# ----------------------------------------------------------
-# BLOCK 1 — STRATEGIC IMPACT & SCOPE
-# ----------------------------------------------------------
-with colA:
-    st.markdown('<div class="card-block">', unsafe_allow_html=True)
-    st.markdown('<div class="card-title">Strategic Impact & Scope</div>', unsafe_allow_html=True)
-
-    job_category = st.selectbox(
-        "Job Category *",
-        ["Executive", "Manager", "Professional", "Technical Support", "Business Support", "Production"]
-    )
-
-    geo_scope = st.selectbox(
-        "Geographic Scope *",
-        ["Local", "Regional", "Multi-country", "Global"]
-    )
-
-    org_impact = st.selectbox(
-        "Organizational Impact *",
-        ["Team", "Department / Subfunction", "Function", "Multi-function / BU-wide", "Enterprise-wide"]
-    )
-
-    span_control = st.selectbox(
-        "Span of Control *",
-        [
-            "No direct reports",
-            "Individual contributor with influence",
-            "Supervises technicians/operators",
-            "Leads professionals",
-            "Leads multiple teams",
-            "Leads managers",
-            "Leads multi-layer organization"
-        ]
-    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-
-# ----------------------------------------------------------
-# BLOCK 2 — AUTONOMY & COMPLEXITY
-# ----------------------------------------------------------
-with colB:
-    st.markdown('<div class="card-block">', unsafe_allow_html=True)
-    st.markdown('<div class="card-title">Autonomy & Complexity</div>', unsafe_allow_html=True)
-
-    autonomy = st.selectbox(
-        "Autonomy Level *",
-        [
-            "Works under close supervision",
-            "Works under regular guidance",
-            "Works independently",
-            "Sets direction for others",
-            "Defines organizational strategy"
-        ]
-    )
-
-    problem_solving = st.selectbox(
-        "Problem Solving Complexity *",
-        [
-            "Routine / Standardized",
-            "Moderate analysis",
-            "Complex analysis",
-            "Novel / ambiguous problems",
-            "Strategic, organization-changing problems"
-        ]
-    )
-
-    knowledge_depth = st.selectbox(
-        "Knowledge Depth *",
-        [
-            "Basic / Entry-level knowledge",
-            "Applied technical / professional knowledge",
-            "Advanced specialized expertise",
-            "Recognized expert",
-            "World-class mastery / thought leader"
-        ]
-    )
-
-    influence = st.selectbox(
-        "Influence Level *",
-        [
-            "Internal team only",
-            "Internal cross-team",
-            "Internal multi-function",
-            "External vendors/clients",
-            "Influences industry-level practices"
-        ]
-    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-
-# ----------------------------------------------------------
-# BLOCK 3 — KNOWLEDGE, KPIs & COMPETENCIES
-# ----------------------------------------------------------
-with colC:
-    st.markdown('<div class="card-block">', unsafe_allow_html=True)
-    st.markdown('<div class="card-title">Knowledge, KPIs & Competencies</div>', unsafe_allow_html=True)
-
-    education = st.selectbox(
-        "Education Level *",
-        [
-            "High School",
-            "Technical Degree",
-            "Bachelor’s",
-            "Post-graduate / Specialization",
-            "Master’s",
-            "Doctorate"
-        ]
-    )
-
-    experience = st.selectbox(
-        "Experience Level *",
-        [
-            "< 2 years",
-            "2–5 years",
-            "5–10 years",
-            "10–15 years",
-            "15+ years"
-        ]
-    )
-
-    kpis = st.multiselect(
-        "Primary KPIs * (select ≥1)",
-        ["Financial", "Customer", "Operational", "Quality", "Safety", "Compliance", "Project Delivery", "People Leadership"]
-    )
-
-    competencies = st.multiselect(
-        "Core Competencies * (select ≥1)",
-        ["Communication", "Collaboration", "Analytical Thinking", "Technical Expertise", "Leadership", "Innovation", "Strategic Thinking", "Customer Orientation"]
-    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
 
 # ==========================================================
-# TAG GENERATOR
+# 3 CARDS CONTAINER
+# ==========================================================
+with st.container():
+
+    colA, colB, colC = st.columns(3)
+
+    # ------------------------------------------------------
+    # CARD 1 — STRATEGIC IMPACT & SCOPE
+    # ------------------------------------------------------
+    with colA:
+        st.markdown('<div class="card-block">', unsafe_allow_html=True)
+        st.markdown('<div class="card-title">Strategic Impact & Scope</div>', unsafe_allow_html=True)
+
+        job_category = st.selectbox(
+            "Job Category *",
+            ["Executive", "Manager", "Professional", "Technical Support", "Business Support", "Production"]
+        )
+
+        geo_scope = st.selectbox(
+            "Geographic Scope *",
+            ["Local", "Regional", "Multi-country", "Global"]
+        )
+
+        org_impact = st.selectbox(
+            "Organizational Impact *",
+            ["Team", "Department / Subfunction", "Function", "Multi-function / BU-wide", "Enterprise-wide"]
+        )
+
+        span_control = st.selectbox(
+            "Span of Control *",
+            [
+                "No direct reports",
+                "Individual contributor with influence",
+                "Supervises technicians/operators",
+                "Leads professionals",
+                "Leads multiple teams",
+                "Leads managers",
+                "Leads multi-layer organization"
+            ]
+        )
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ------------------------------------------------------
+    # CARD 2 — AUTONOMY & COMPLEXITY
+    # ------------------------------------------------------
+    with colB:
+        st.markdown('<div class="card-block">', unsafe_allow_html=True)
+        st.markdown('<div class="card-title">Autonomy & Complexity</div>', unsafe_allow_html=True)
+
+        autonomy = st.selectbox(
+            "Autonomy Level *",
+            [
+                "Works under close supervision",
+                "Works under regular guidance",
+                "Works independently",
+                "Sets direction for others",
+                "Defines organizational strategy"
+            ]
+        )
+
+        problem_solving = st.selectbox(
+            "Problem Solving Complexity *",
+            [
+                "Routine / Standardized",
+                "Moderate analysis",
+                "Complex analysis",
+                "Novel / ambiguous problems",
+                "Strategic, organization-changing problems"
+            ]
+        )
+
+        knowledge_depth = st.selectbox(
+            "Knowledge Depth *",
+            [
+                "Basic / Entry-level knowledge",
+                "Applied technical / professional knowledge",
+                "Advanced specialized expertise",
+                "Recognized expert",
+                "World-class mastery / thought leader"
+            ]
+        )
+
+        influence = st.selectbox(
+            "Influence Level *",
+            [
+                "Internal team only",
+                "Internal cross-team",
+                "Internal multi-function",
+                "External vendors/clients",
+                "Influences industry-level practices"
+            ]
+        )
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ------------------------------------------------------
+    # CARD 3 — KNOWLEDGE, KPIs & COMPETENCIES
+    # ------------------------------------------------------
+    with colC:
+        st.markdown('<div class="card-block">', unsafe_allow_html=True)
+        st.markdown('<div class="card-title">Knowledge, KPIs & Competencies</div>', unsafe_allow_html=True)
+
+        education = st.selectbox(
+            "Education Level *",
+            [
+                "High School",
+                "Technical Degree",
+                "Bachelor’s",
+                "Post-graduate / Specialization",
+                "Master’s",
+                "Doctorate"
+            ]
+        )
+
+        experience = st.selectbox(
+            "Experience Level *",
+            [
+                "< 2 years",
+                "2–5 years",
+                "5–10 years",
+                "10–15 years",
+                "15+ years"
+            ]
+        )
+
+        kpis = st.multiselect(
+            "Primary KPIs * (select ≥1)",
+            ["Financial", "Customer", "Operational", "Quality", "Safety", "Compliance", "Project Delivery", "People Leadership"]
+        )
+
+        competencies = st.multiselect(
+            "Core Competencies * (select ≥1)",
+            ["Communication", "Collaboration", "Analytical Thinking", "Technical Expertise", "Leadership", "Innovation", "Strategic Thinking", "Customer Orientation"]
+        )
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
+# ==========================================================
+# USER TAG BUILDER
 # ==========================================================
 def build_user_tags():
+
     tags = set()
 
     tags.update(job_category.lower().split())
@@ -515,6 +557,7 @@ def build_user_tags():
     return tags
 
 
+
 # ==========================================================
 # BUTTON
 # ==========================================================
@@ -522,8 +565,9 @@ st.write("")
 generate = st.button("Generate Job Match Description", type="primary")
 
 
+
 # ==========================================================
-# RUN MATCH AFTER CLICK
+# RUN MATCH
 # ==========================================================
 if generate:
 
