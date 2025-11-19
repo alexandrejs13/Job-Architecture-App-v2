@@ -261,107 +261,228 @@ with c1c:
     )
 
 # ==========================================================
-# SEÇÃO 2 — AUTONOMY & COMPLEXITY
+# PARTE 4 — LÓGICA DE VALIDAÇÃO + MATCH + RENDER HTML
+# 100% COMPATÍVEL COM AS VARIÁVEIS DO SEU FORMULÁRIO
 # ==========================================================
-st.markdown("""
-<div class="section-title">Autonomy & Complexity</div>
-<div class="divider-line"></div>
-""", unsafe_allow_html=True)
 
-c2a, c2b, c2c = st.columns(3)
+# Lista unificada dos campos obrigatórios com seus valores reais
+required_fields = {
+    "Job Family": job_family,
+    "Sub Job Family": sub_job_family,
+    "Job Category": job_category,
+    "Geographic Scope": geo_scope,
+    "Organizational Impact": org_impact,
+    "Span of Control": span_control,
+    "Nature of Work": nature_work,
+    "Financial Impact": financial_impact,
+    "Stakeholder Complexity": stakeholder_complexity,
+    "Decision Type": decision_type,
+    "Decision Time Horizon": decision_horizon,
+    "Autonomy Level": autonomy,
+    "Problem Solving Complexity": problem_solving,
+    "Knowledge Depth": knowledge_depth,
+    "Operational Complexity": operational_complexity,
+    "Influence Level": influence_level,
+    "Education Level": education,
+    "Experience Level": experience,
+    "Specialization Level": specialization_level,
+    "Innovation Responsibility": innovation_resp,
+    "Leadership Type": leadership_type,
+    "Organizational Influence": org_influence
+}
 
-with c2a:
-    autonomy = st.selectbox(
-        "Autonomy Level",
-        ["Choose option", "Close supervision", "Regular guidance", "Independent", "Sets direction for others", "Defines strategy"]
-    )
-
-    problem_solving = st.selectbox(
-        "Problem Solving Complexity",
-        ["Choose option", "Routine/Standardized", "Moderate", "Complex", "Ambiguous/Novel", "Organization-level"]
-    )
-
-with c2b:
-    knowledge_depth = st.selectbox(
-        "Knowledge Depth",
-        ["Choose option", "Entry-level knowledge", "Applied knowledge", "Advanced expertise", "Recognized expert", "Thought leader"]
-    )
-
-    operational_complexity = st.selectbox(
-        "Operational Complexity",
-        ["Choose option", "Stable operations", "Some variability", "Complex operations", "High-variability environment"]
-    )
-
-with c2c:
-    influence_level = st.selectbox(
-        "Influence Level",
-        ["Choose option", "Team", "Cross-team", "Multi-function", "External vendors/clients", "Industry-level influence"]
-    )
+# Campos do tipo multiselect (não podem estar vazios)
+required_multi = {
+    "Primary KPIs": kpis_selected,
+    "Core Competencies": competencies_selected
+}
 
 # ==========================================================
-# SEÇÃO 3 — KNOWLEDGE, KPIs & COMPETENCIES
+# FUNÇÃO — Marcar título + borda vermelha
 # ==========================================================
-st.markdown("""
-<div class="section-title">Knowledge, KPIs & Competencies</div>
-<div class="divider-line"></div>
-""", unsafe_allow_html=True)
+def mark_invalid_fields():
+    error_css = "<style>"
+    
+    for label, value in required_fields.items():
+        if value == "Choose option":
+            safe_label = label.replace(" ", "").lower()
+            error_css += f"""
+            label[for="{safe_label}"] p {{
+                color: red !important;
+                font-weight: 700 !important;
+            }}
+            div[data-testid="stSelectbox"] {{
+                border: 2px solid red !important;
+                border-radius: 6px !important;
+            }}
+            """
 
-c3a, c3b, c3c = st.columns(3)
+    for label, value in required_multi.items():
+        if not value:
+            safe = label.replace(" ", "").lower()
+            error_css += f"""
+            label[for="{safe}"] p {{
+                color: red !important;
+                font-weight: 700 !important;
+            }}
+            div[data-testid="stMultiSelect"] {{
+                border: 2px solid red !important;
+                border-radius: 6px !important;
+            }}
+            """
 
-with c3a:
-    education = st.selectbox(
-        "Education Level",
-        ["Choose option", "High School", "Technical Degree", "Bachelor’s", "Post-graduate", "Master’s", "Doctorate"]
-    )
+    error_css += "</style>"
+    st.markdown(error_css, unsafe_allow_html=True)
 
-    experience = st.selectbox(
-        "Experience Level",
-        ["Choose option", "< 2 years", "2–5 years", "5–10 years", "10–15 years", "15+ years"]
-    )
 
-with c3b:
-    kpis_selected = st.multiselect(
-        "Primary KPIs",
-        ["Financial", "Customer", "Operational", "Quality", "Safety", "Compliance", "Project Delivery", "People Leadership"]
-    )
+# ==========================================================
+# BOTÃO – AÇÃO
+# ==========================================================
+if generate:
 
-    specialization_level = st.selectbox(
-        "Specialization Level",
-        ["Choose option", "Generalist", "Specialist", "Deep Specialist"]
-    )
+    # -------- VALIDAR CAMPOS --------
+    missing = []
 
-with c3c:
-    competencies_selected = st.multiselect(
-        "Core Competencies",
-        ["Communication", "Collaboration", "Analytical Thinking", "Technical Expertise", "Leadership", "Innovation", "Strategic Thinking", "Customer Orientation"]
-    )
+    for label, value in required_fields.items():
+        if value == "Choose option":
+            missing.append(label)
 
-    innovation_resp = st.selectbox(
-        "Innovation Responsibility",
-        ["Choose option", "Execution", "Incremental improvements", "Major improvements", "Innovation leadership"]
-    )
+    for label, value in required_multi.items():
+        if not value:
+            missing.append(label)
 
-# Linha extra
-c3d, c3e = st.columns(2)
+    # Se faltar algo → bloquear
+    if missing:
+        st.markdown("""
+        <div style="
+            background:#fdeaea;
+            padding:16px;
+            border-radius:8px;
+            color:#a13333;
+            margin-top:16px;
+            font-size:18px;
+        ">
+        Please fill in all required fields before generating the match.
+        </div>
+        """, unsafe_allow_html=True)
 
-with c3d:
-    leadership_type = st.selectbox(
-        "Leadership Type",
-        ["Choose option", "None", "Team Lead", "Supervisor", "Manager", "Senior Manager", "Director"]
-    )
+        mark_invalid_fields()
+        st.stop()
 
-with c3e:
-    org_influence = st.selectbox(
-        "Organizational Influence",
-        ["Choose option", "Team", "Department", "Business Unit", "Function", "Enterprise-wide"]
-    )
+    # ==========================================================
+    #  COLETAR INPUTS PARA O MATCH ALGORITMO
+    # ==========================================================
+    user_inputs = {
+        "job_family": job_family,
+        "sub_job_family": sub_job_family,
+        "job_category": job_category,
+        "geo_scope": geo_scope,
+        "org_impact": org_impact,
+        "span_control": span_control,
+        "nature_work": nature_work,
+        "financial_impact": financial_impact,
+        "stakeholder_complexity": stakeholder_complexity,
+        "decision_type": decision_type,
+        "decision_horizon": decision_horizon,
+        "autonomy": autonomy,
+        "problem_solving": problem_solving,
+        "knowledge_depth": knowledge_depth,
+        "operational_complexity": operational_complexity,
+        "influence_level": influence_level,
+        "education": education,
+        "experience": experience,
+        "specialization": specialization_level,
+        "innovation_resp": innovation_resp,
+        "leadership_type": leadership_type,
+        "org_influence": org_influence,
+        "kpis": kpis_selected,
+        "competencies": competencies_selected
+    }
 
-# ----------------------------------------------------------
-# BOTÃO GERAR
-# ----------------------------------------------------------
-col_button = st.columns([1, 6, 1])[0]
-with col_button:
-    generate = st.button("Generate Job Match Description", use_container_width=True)
+    # ==========================================================
+    # MATCH ENGINE — versão simples (PLACEHOLDER)
+    # (Você já tem a versão A definitiva)
+    # ==========================================================
+    best_job = df_profiles.iloc[0].to_dict()   # substitui pelo match real
+    match_score = 75                           # substitui pela sua lógica real
+
+    # ==========================================================
+    # RENDER HTML FINAL — BACKGROUND BRANCO SEM SCROLL
+    # ==========================================================
+
+    st.markdown("""
+    <style>
+        .match-card {
+            background: white;
+            padding: 32px;
+            border-radius: 14px;
+            border: 1px solid #ececec;
+        }
+        .section-title-out {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 32px;
+        }
+        .divider-out {
+            height: 1px;
+            background: #e4e4e4;
+            margin: 6px 0 18px 0;
+        }
+        .description-box {
+            font-size: 16px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div class="match-card">
+
+        <h2 style="font-size:26px; margin-bottom:0;">
+            Recommended Match: {best_job['job_profile']}
+        </h2>
+
+        <div style="color:#145efc; font-size:20px; margin-top:4px;">
+            Match Score: {match_score}%
+        </div>
+
+        <div style="margin-top:22px; font-size:17px;">
+            <b>Job Family:</b> {best_job['job_family']}<br>
+            <b>Sub Job Family:</b> {best_job['sub_job_family']}<br>
+            <b>Career Path:</b> {best_job['career_path']}<br>
+            <b>Full Job Code:</b> {best_job['full_job_code']}<br>
+        </div>
+
+        <div class="section-title-out">Job Profile Description</div>
+        <div class="divider-out"></div>
+        <div class="description-box">{best_job['job_profile_description']}</div>
+
+        <div class="section-title-out">Career Band Description</div>
+        <div class="divider-out"></div>
+        <div class="description-box">{best_job['career_band_description']}</div>
+
+        <div class="section-title-out">Role Description</div>
+        <div class="divider-out"></div>
+        <div class="description-box">{best_job['role_description']}</div>
+
+        <div class="section-title-out">Grade Differentiator</div>
+        <div class="divider-out"></div>
+        <div class="description-box">{best_job['grade_differentiator']}</div>
+
+        <div class="section-title-out">Qualifications</div>
+        <div class="divider-out"></div>
+        <div class="description-box">{best_job['qualifications']}</div>
+
+        <div class="section-title-out">Specific parameters / KPIs</div>
+        <div class="divider-out"></div>
+        <div class="description-box">{best_job['specific_kpis']}</div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+
+
 # ==========================================================
 # PARTE 3 — VALIDAÇÃO + HARD FILTER + MATCH ENGINE WTW
 # ==========================================================
