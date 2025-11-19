@@ -282,15 +282,32 @@ code, pre {
     display: inline !important;
 }
 /* ============================================================
-   FIX DEFINITIVO — impedir qualquer esticamento das páginas
-   (equivalente ao layout das páginas Job Architecture)
+   FIX DEFINITIVO — impedir a página de esticar em TODOS os containers possíveis
    ============================================================ */
 
-section.main > div {
+/* 1. Container raiz da aplicação (mais comum nas versões novas) */
+[data-testid="stAppViewContainer"] > .main > div {
     max-width: 1400px !important;
     margin-left: auto !important;
     margin-right: auto !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
 }
+
+/* 2. Container fallback usado em algumas builds */
+.main > div {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
+/* 3. Container usado em páginas multipage especiais */
+[data-testid="stAppViewContainer"] .block-container {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
 
