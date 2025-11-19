@@ -60,11 +60,35 @@ st.markdown(f"""
     margin-right: auto !important;
 }}
 
-.sig-divider {{
-    border: none;
-    border-bottom: 1px solid #e2e2e2;
-    margin: 28px 0 20px 0;
-}}
+# ==========================================================
+# GLOBAL LAYOUT — limita largura e impede esticar infinito
+# ==========================================================
+st.markdown("""
+<style>
+
+    .main > div {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .stDataFrame {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .block-container, .stColumn {
+        max-width: 1400px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+</style>
+""", unsafe_allow_html=True)
+
 
 </style>
 """, unsafe_allow_html=True)
