@@ -70,7 +70,7 @@ section.main > div {{
 
 
 # ==========================================================
-# HEADER SIG (PADRÃO)
+# HEADER SIG
 # ==========================================================
 def load_icon_png(path):
     if not os.path.exists(path):
@@ -193,8 +193,8 @@ with tab1:
 
 
 
-    # --------------------- TREEMAP SIG (MODELO C) --------------------------
-    st.markdown("### Subfamilies per Family (SIG Treemap)")
+    # --------------------- SUBFAMILIES PER FAMILY — BARRAS VERTICAIS SIG --------------------------
+    st.markdown("### Subfamilies per Family")
 
     subf = (
         df.groupby(COL_FAMILY)[COL_SUBFAMILY]
@@ -205,21 +205,19 @@ with tab1:
 
     subf["Color"] = [SIG_COLORS[i % len(SIG_COLORS)] for i in range(len(subf))]
 
-    treemap = (
+    bar_subf = (
         alt.Chart(subf)
-        .mark_rect()
+        .mark_bar(size=50)
         .encode(
-            x=alt.X("Count:Q", stack=True, title=""),
-            y=alt.Y("Count:Q", stack="zero", title=""),
-            color=alt.Color("Color:N", scale=None),
+            x=alt.X(f"{COL_FAMILY}:N", sort='-y', title="Family"),
+            y=alt.Y("Count:Q", title="Subfamilies"),
+            color=alt.Color("Color:N", scale=None, legend=None),
             tooltip=[COL_FAMILY, "Count"]
         )
-        .transform_window(
-            sum_count="sum(Count)",
-        )
+        .properties(height=420)
     )
 
-    st.altair_chart(treemap, use_container_width=True)
+    st.altair_chart(bar_subf, use_container_width=True)
 
 
 
