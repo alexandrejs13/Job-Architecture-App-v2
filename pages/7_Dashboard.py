@@ -104,6 +104,21 @@ COL_GRADE = "Global Grade"
 
 
 # ==========================================================
+# SIG COLOR PALETTE
+# ==========================================================
+SIG_COLORS = [
+    "#145efc",  # Sky
+    "#dca0ff",  # Spark
+    "#4fa593",  # Forest 1
+    "#167665",  # Forest 2
+    "#00493b",  # Forest 3
+    "#f5f073",  # Moss 1
+    "#c0b846",  # Moss 2
+    "#bfbab5",  # Sand 3
+]
+
+
+# ==========================================================
 # TABS (sem emojis)
 # ==========================================================
 tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
@@ -151,7 +166,7 @@ with tab1:
 
     st.markdown("<hr class='sig-divider'>", unsafe_allow_html=True)
 
-    
+
     # --------------------- Grade Distribution --------------------------
     st.markdown("### Grade Distribution (Structure Complexity)")
 
@@ -178,8 +193,8 @@ with tab1:
 
 
 
-    # --------------------- NOVO: Pizza Subfamilies per Family --------------------------
-    st.markdown("### Subfamilies per Family")
+    # --------------------- TREEMAP SIG (MODELO C) --------------------------
+    st.markdown("### Subfamilies per Family (SIG Treemap)")
 
     subf = (
         df.groupby(COL_FAMILY)[COL_SUBFAMILY]
@@ -188,17 +203,23 @@ with tab1:
         .sort_values("Count", ascending=False)
     )
 
-    pie = (
+    subf["Color"] = [SIG_COLORS[i % len(SIG_COLORS)] for i in range(len(subf))]
+
+    treemap = (
         alt.Chart(subf)
-        .mark_arc(innerRadius=60)
+        .mark_rect()
         .encode(
-            theta="Count:Q",
-            color=alt.Color(f"{COL_FAMILY}:N", legend=None),
+            x=alt.X("Count:Q", stack=True, title=""),
+            y=alt.Y("Count:Q", stack="zero", title=""),
+            color=alt.Color("Color:N", scale=None),
             tooltip=[COL_FAMILY, "Count"]
+        )
+        .transform_window(
+            sum_count="sum(Count)",
         )
     )
 
-    st.altair_chart(pie, use_container_width=True)
+    st.altair_chart(treemap, use_container_width=True)
 
 
 
@@ -220,13 +241,39 @@ with tab2:
         (df[COL_SUBFAMILY] == selected_subfamily)
     ]
 
+    # ========== NEW KPI: Subfamilies in Family ==========
+    total_subf = df[df[COL_FAMILY] == selected_family][COL_SUBFAMILY].nunique()
+
+    top_cols = st.columns(3)
+
+    top_cols[0].markdown(f"""
+        <div style="
+            background:#ffffff;
+            border-radius:12px;
+            padding:14px 18px;
+            border:1px solid #e4e4e4;
+            box-shadow:0 2px 8px rgba(0,0,0,0.04);
+            height:90px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+        ">
+            <div style="font-size:13px; font-weight:600; color:#727272;">
+                Subfamilies in Family
+            </div>
+            <div style="font-size:26px; font-weight:700; margin-top:4px; color:#145efc;">
+                {total_subf}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
     # ========== KPIs HORIZONTAIS (SUBFAMILY) ==========
     sub_kpis = {
         "Profiles": sub_df[COL_PROFILE].nunique(),
         "Grades": sub_df[COL_GRADE].nunique(),
     }
 
-    cols = st.columns(len(sub_kpis))
+    cols = top_cols[1:3]
 
     for col, (label, number) in zip(cols, sub_kpis.items()):
         col.markdown(f"""
