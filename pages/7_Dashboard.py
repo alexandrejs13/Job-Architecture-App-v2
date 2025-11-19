@@ -68,6 +68,43 @@ section.main > div {{
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+
+/* === LIMITADOR GLOBAL — EXATAMENTE IGUAL AO DA PÁGINA JOB ARCHITECTURE === */
+
+/* Container principal */
+.main > div {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
+/* DataFrames */
+.stDataFrame {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Containers de colunas e blocos */
+.block-container, .stColumn {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Isso impede o "esticamento" total do layout */
+section.main > div {
+    max-width: 1400px !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
 
 # ==========================================================
 # HEADER SIG
