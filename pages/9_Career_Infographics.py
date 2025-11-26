@@ -7,8 +7,13 @@ from pptx import Presentation
 
 
 @st.cache_data
-def list_ppts(ppts_dir: Path) -> List[Path]:
-    return sorted(ppts_dir.glob("*.pptx"))
+def list_ppts() -> List[Path]:
+    candidates = []
+    for folder in ["PPTs", "ppts"]:
+        d = Path(folder)
+        if d.exists():
+            candidates.extend(d.glob("*.pptx"))
+    return sorted(candidates)
 
 
 def infer_title_from_filename(path: Path) -> str:
@@ -54,8 +59,7 @@ def render_infographic(slides: List[Dict[str, str]]) -> None:
 
 def main():
     st.set_page_config(page_title="Career Infographics", layout="wide")
-    ppts_dir = Path("ppts")
-    files = list_ppts(ppts_dir)
+    files = list_ppts()
 
     st.title("Career Path Infographics")
     st.markdown("Selecione um cargo (PPT) para visualizar o conteúdo como infográfico.")
