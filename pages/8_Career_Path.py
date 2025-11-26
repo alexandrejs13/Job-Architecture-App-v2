@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 from typing import Dict, List
+from difflib import SequenceMatcher
 
 import pandas as pd
 import streamlit as st
@@ -28,12 +29,31 @@ def list_ppts() -> List[Path]:
     return sorted(candidates)
 
 
+def _slug(text: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
 def match_ppt(ppts: List[Path], family: str, sub_family: str, profile: str) -> Path | None:
-    tokens = [t.lower() for t in [profile, sub_family, family] if t]
+    tokens = [t for t in [profile, sub_family, family] if t]
+    token_slugs = [_slug(t) for t in tokens]
+
+    # 1) match por inclusão direta dos slugs no nome do arquivo
     for ppt in ppts:
-        name = ppt.stem.lower()
-        if any(tok and tok in name for tok in tokens):
+        stem_slug = _slug(ppt.stem)
+        if any(tok and tok in stem_slug for tok in token_slugs):
             return ppt
+
+    # 2) fallback: melhor similaridade com o Job Profile
+    prof_slug = _slug(profile)
+    best_ppt, best_score = None, 0.0
+    for ppt in ppts:
+        stem_slug = _slug(ppt.stem)
+        score = SequenceMatcher(None, prof_slug, stem_slug).ratio()
+        if score > best_score:
+            best_score = score
+            best_ppt = ppt
+    if best_score >= 0.55:
+        return best_ppt
     return None
 
 
@@ -85,6 +105,17 @@ def main():
     if profiles.empty:
         st.stop()
 
+    # restringe os cargos aos que têm PPT correspondente (5 de teste)
+    allowed_profiles = set()
+    for ppt in ppts:
+        stem_slug = _slug(ppt.stem.replace("career_path", "").replace("career", ""))
+        for _, row in profiles.iterrows():
+            prof_slug = _slug(row["Job Profile"])
+            if stem_slug and stem_slug in prof_slug:
+                allowed_profiles.add(row["Job Profile"])
+    if allowed_profiles:
+        profiles = profiles[profiles["Job Profile"].isin(allowed_profiles)]
+
     families = sorted(profiles["Job Family"].dropna().unique().tolist())
     sel_fam = st.selectbox("Job Family", families)
 
@@ -98,7 +129,12 @@ def main():
 
     ppt_path = match_ppt(ppts, sel_fam, sel_sub, sel_prof)
     if not ppt_path:
-        st.warning("Nenhum PPT encontrado para este cargo (considerando os exemplos).")
+        st.warning(
+            "Nenhum PPT encontrado para este cargo (considerando os exemplos). "
+            "Verifique o nome do arquivo ou adicione o PPT na pasta PPTs/ppts."
+        )
+        if ppts:
+            st.caption("PPTs disponíveis: " + ", ".join(p.name for p in ppts))
         return
 
     slides = extract_slides(ppt_path)
