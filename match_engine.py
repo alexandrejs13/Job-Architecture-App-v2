@@ -1,6 +1,6 @@
 # match_engine.py
 import pandas as pd
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 
 # ==========================================================
@@ -103,9 +103,39 @@ def _clean_list(x: Any) -> List[str]:
 
 
 def _overlap(a: List[str], b: List[str]) -> float:
-    if not b:
+    """Jaccard similarity between two lists."""
+    sa, sb = set(a), set(b)
+    if not sa and not sb:
         return 0.0
-    return len(set(a).intersection(set(b))) / len(b)
+    return len(sa & sb) / len(sa | sb)
+
+
+def _grade_from_row(row: Any) -> Optional[float]:
+    """Try to extract a numeric grade/level from the profile row."""
+    gg = None
+    try:
+        gg = float(row.get("Global Grade"))
+    except Exception:
+        gg = None
+
+    if gg:
+        return gg
+
+    # fallback: try career level if it is numeric-ish
+    try:
+        cl = float(row.get("Career Level"))
+        return cl
+    except Exception:
+        return None
+
+
+def _normalized_grade_similarity(user_grade: float, profile_grade: Optional[float]) -> float:
+    """Similarity 0-1 based on grade proximity."""
+    if profile_grade is None or user_grade is None:
+        return 0.5  # neutral if missing
+    gap = abs(profile_grade - user_grade)
+    denom = max(profile_grade, user_grade, 1.0)
+    return max(0.0, 1.0 - gap / denom)
 
 
 # ==========================================================
@@ -134,6 +164,19 @@ def compute_job_match(form_inputs: Dict[str, Any], df_profiles: pd.DataFrame) ->
     Retorna:
         {"row": best_row (Series), "score_pct": int} ou None.
     """
+
+    required_cols = {
+        "Job Family",
+        "Sub Job Family",
+        "Specific parameters / KPIs",
+        "Competencies 1",
+        "Competencies 2",
+        "Competencies 3",
+        "Global Grade",
+    }
+    missing = required_cols - set(df_profiles.columns)
+    if missing:
+        raise ValueError(f"Missing columns in Job Profile dataset: {', '.join(sorted(missing))}")
 
     emap = _encode_map()
 
@@ -190,41 +233,27 @@ def compute_job_match(form_inputs: Dict[str, Any], df_profiles: pd.DataFrame) ->
     # 4) Global Grade numérico para penalidade
     df_filtered["__gg_num"] = pd.to_numeric(df_filtered["Global Grade"], errors="coerce")
 
+    # Estimar um "nível" do usuário a partir de sinais de senioridade
+    user_grade_hint = (
+        user_sig["lead"] + user_sig["orginf"] + user_sig["impact"] + user_sig["span"] + user_sig["geo"]
+    ) / 5.0
+
     scores: List[float] = []
-
     for _, row in df_filtered.iterrows():
-        gg_val = row["__gg_num"]
-        grade_penalty = 0.0
-        if pd.notna(gg_val):
-            try:
-                if abs(int(gg_val) - user_sig["lead"]) > 4:
-                    grade_penalty = -0.15
-            except Exception:
-                grade_penalty = 0.0
+        profile_grade = _grade_from_row(row)
+        grade_sim = _normalized_grade_similarity(user_grade_hint, profile_grade)
 
-        # Similaridade KPIs / Competências
         kpi_score = _overlap(kpis_selected, row["__kpis_list"])
         comp_score = _overlap(competencies_selected, row["__comp_list"])
 
-        # Score final (mesmo espírito da versão unificada)
-        final_score = (
-            0.40 * (user_sig["geo"] + user_sig["impact"] + user_sig["auto"] + user_sig["ps"] + user_sig["kdepth"]) +
-            0.20 * (user_sig["dtype"] + user_sig["dhoriz"] + user_sig["opcomp"]) +
-            0.20 * (kpi_score * 5) +
-            0.15 * (comp_score * 5) +
-            0.05 * (user_sig["edu"] + user_sig["exp"]) +
-            grade_penalty
-        )
-
+        # Combinação ponderada: alinhamento de nível + aderência a KPIs/competências
+        final_score = 0.5 * grade_sim + 0.3 * kpi_score + 0.2 * comp_score
         scores.append(final_score)
 
     df_filtered["__match_score"] = scores
-
     best = df_filtered.sort_values("__match_score", ascending=False).iloc[0]
+
     max_score = float(df_filtered["__match_score"].max())
-    if max_score <= 0:
-        score_pct = 60
-    else:
-        score_pct = int(round((float(best["__match_score"]) / max_score) * 100))
+    score_pct = int(round((float(best["__match_score"]) / max_score) * 100)) if max_score > 0 else 60
 
     return {"row": best, "score_pct": score_pct}
